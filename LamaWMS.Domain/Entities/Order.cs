@@ -9,6 +9,5 @@ public class Order
     public string Number { get; set; } = null!;
 
     public string CustomerName { get; set; } = null!;
-
-    public ICollection<Product> Products { get; set; } = new List<Product>();
 }
+

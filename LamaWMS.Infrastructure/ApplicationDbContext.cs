@@ -125,11 +125,6 @@ public class ApplicationDbContext : DbContext
             entity.Property(x => x.Name)
                 .HasMaxLength(200)
                 .IsRequired();
-
-            entity.HasOne(x => x.Order)
-                .WithMany(x => x.Products)
-                .HasForeignKey(x => x.OrderId)
-                .OnDelete(DeleteBehavior.Cascade);
         });
     }
 

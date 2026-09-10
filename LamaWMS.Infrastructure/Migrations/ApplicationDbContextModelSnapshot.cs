@@ -97,12 +97,7 @@ namespace LamaWMS.Infrastructure.Migrations
                         .HasMaxLength(200)
                         .HasColumnType("character varying(200)");
 
-                    b.Property<Guid>("OrderId")
-                        .HasColumnType("uuid");
-
                     b.HasKey("Id");
-
-                    b.HasIndex("OrderId");
 
                     b.ToTable("Products");
                 });
@@ -233,17 +228,6 @@ namespace LamaWMS.Infrastructure.Migrations
                     b.ToTable("RollReservations");
                 });
 
-            modelBuilder.Entity("LamaWMS.Domain.Entities.Product", b =>
-                {
-                    b.HasOne("LamaWMS.Domain.Entities.Order", "Order")
-                        .WithMany("Products")
-                        .HasForeignKey("OrderId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Order");
-                });
-
             modelBuilder.Entity("LamaWMS.Domain.Entities.ProductFabric", b =>
                 {
                     b.HasOne("LamaWMS.Domain.Entities.Fabric", "Fabric")
@@ -328,11 +312,6 @@ namespace LamaWMS.Infrastructure.Migrations
                     b.Navigation("ProductFabrics");
 
                     b.Navigation("Rolls");
-                });
-
-            modelBuilder.Entity("LamaWMS.Domain.Entities.Order", b =>
-                {
-                    b.Navigation("Products");
                 });
 
             modelBuilder.Entity("LamaWMS.Domain.Entities.Product", b =>
