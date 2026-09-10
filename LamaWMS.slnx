@@ -1,0 +1,5 @@
+<Solution>
+  <Project Path="LamaWMS.Domain/LamaWMS.Domain.csproj" />
+  <Project Path="LamaWMS.Infrastructure/LamaWMS.Infrastructure.csproj" />
+  <Project Path="LamaWMS.WebUI/LamaWMS.WebUI.csproj" />
+</Solution>
