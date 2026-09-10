@@ -6,10 +6,6 @@ public class Product
 
     public string Name { get; set; } = null!;
 
-    public Guid OrderId { get; set; }
-
-    public Order Order { get; set; } = null!;
-
     public ICollection<ProductFabric> ProductFabrics { get; set; }
         = new List<ProductFabric>();
 
