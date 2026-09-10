@@ -1,0 +1,69 @@
+﻿@model LamaWMS.Domain.Entities.ProductFabric
+
+@{
+    ViewData["Title"] = "Добавить ткань";
+}
+
+<h1>Добавить ткань</h1>
+
+<div class="text-muted mb-4">
+    Изделие: @ViewBag.ProductName
+</div>
+
+<form asp-action="AddFabric"
+      method="post">
+
+    <input type="hidden"
+           asp-for="ProductId" />
+
+    <div asp-validation-summary="All"
+         class="text-danger mb-3">
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="FabricId"
+               class="form-label">
+            Ткань
+        </label>
+
+        <select asp-for="FabricId"
+                asp-items="ViewBag.FabricId"
+                class="form-select">
+
+            <option value="">
+                -- выберите ткань --
+            </option>
+
+        </select>
+
+        <span asp-validation-for="FabricId"
+              class="text-danger">
+        </span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="RequiredLength"
+               class="form-label">
+            Требуемая длина, м
+        </label>
+
+        <input asp-for="RequiredLength"
+               class="form-control"
+               step="0.01" />
+
+        <span asp-validation-for="RequiredLength"
+              class="text-danger">
+        </span>
+    </div>
+
+    <button type="submit"
+            class="btn btn-primary">
+        Добавить
+    </button>
+
+    <a asp-action="Details"
+       asp-route-id="@Model.ProductId"
+       class="btn btn-secondary">
+        Назад
+    </a>
+</form>

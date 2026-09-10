@@ -1,0 +1,36 @@
+﻿@model LamaWMS.Domain.Entities.Cell
+
+@{
+    ViewData["Title"] = "Новая ячейка";
+}
+
+<h1>Новая ячейка</h1>
+
+<form asp-action="Create" method="post">
+
+    <div asp-validation-summary="All"
+         class="text-danger mb-3">
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="Code" class="form-label">
+            Код ячейки
+        </label>
+
+        <input asp-for="Code"
+               class="form-control"
+               placeholder="Например: A-01-01" />
+
+        <span asp-validation-for="Code"
+              class="text-danger">
+        </span>
+    </div>
+
+    <button type="submit" class="btn btn-primary">
+        Создать
+    </button>
+
+    <a asp-action="Index" class="btn btn-secondary">
+        Назад
+    </a>
+</form>

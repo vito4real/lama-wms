@@ -1,0 +1,46 @@
+﻿@model LamaWMS.Domain.Entities.Fabric
+
+@{
+    ViewData["Title"] = "Удаление ткани";
+}
+
+<h1>Удаление ткани</h1>
+
+<div asp-validation-summary="All"
+     class="text-danger mb-3">
+</div>
+
+<p>
+    Удалить ткань
+    <strong>@Model.Name — @Model.Color</strong>?
+</p>
+
+@if (Model.Rolls.Any())
+{
+    <div class="alert alert-warning">
+        Нельзя удалить ткань, пока с ней связаны рулоны.
+    </div>
+}
+
+<form asp-action="Delete" method="post">
+
+    <input type="hidden" asp-for="Id" />
+
+    @if (Model.Rolls.Any())
+    {
+        <button class="btn btn-danger" disabled>
+            Удалить
+        </button>
+    }
+    else
+    {
+        <button type="submit" class="btn btn-danger">
+            Удалить
+        </button>
+    }
+
+    <a asp-action="Index"
+       class="btn btn-secondary">
+        Назад
+    </a>
+</form>

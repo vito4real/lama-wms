@@ -1,0 +1,91 @@
+﻿@model LamaWMS.Domain.Entities.Roll
+
+@{
+    ViewData["Title"] = "Удаление рулона";
+}
+
+<div class="mb-4">
+    <h1>Удаление рулона</h1>
+
+    <div class="text-muted">
+        Подтверждение удаления
+    </div>
+</div>
+
+<div class="alert alert-warning">
+    Вы действительно хотите удалить этот рулон?
+</div>
+
+<div class="card mb-4">
+    <div class="card-body">
+
+        <dl class="row mb-0">
+
+            <dt class="col-sm-3">
+                Номер рулона
+            </dt>
+
+            <dd class="col-sm-9">
+                <strong>@Model.Number</strong>
+            </dd>
+
+            <dt class="col-sm-3">
+                Ткань
+            </dt>
+
+            <dd class="col-sm-9">
+                @Model.Fabric.Name
+            </dd>
+
+            <dt class="col-sm-3">
+                Цвет
+            </dt>
+
+            <dd class="col-sm-9">
+                @Model.Fabric.Color
+            </dd>
+
+            <dt class="col-sm-3">
+                Ячейка
+            </dt>
+
+            <dd class="col-sm-9">
+                @(Model.Cell?.Code ?? "Не размещён")
+            </dd>
+
+            <dt class="col-sm-3">
+                Начальная длина
+            </dt>
+
+            <dd class="col-sm-9">
+                @Model.InitialLength.ToString("0.00") м
+            </dd>
+
+            <dt class="col-sm-3">
+                Текущий остаток
+            </dt>
+
+            <dd class="col-sm-9">
+                <strong>@Model.CurrentLength.ToString("0.00") м</strong>
+            </dd>
+
+        </dl>
+
+    </div>
+</div>
+
+<form asp-action="Delete" method="post">
+
+    <input type="hidden" asp-for="Id" />
+
+    <button type="submit"
+            class="btn btn-danger">
+        Удалить
+    </button>
+
+    <a asp-action="Index"
+       class="btn btn-secondary">
+        Назад
+    </a>
+
+</form>

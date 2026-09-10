@@ -1,0 +1,38 @@
+﻿@model LamaWMS.Domain.Entities.Product
+
+@{
+    ViewData["Title"] = "Новое изделие";
+}
+
+<h1>Новое изделие</h1>
+
+<form asp-action="Create" method="post">
+
+    <div asp-validation-summary="All"
+         class="text-danger mb-3">
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="Name"
+               class="form-label">
+            Название
+        </label>
+
+        <input asp-for="Name"
+               class="form-control" />
+
+        <span asp-validation-for="Name"
+              class="text-danger">
+        </span>
+    </div>
+
+    <button type="submit"
+            class="btn btn-primary">
+        Создать
+    </button>
+
+    <a asp-action="Index"
+       class="btn btn-secondary">
+        Назад
+    </a>
+</form>

@@ -1,0 +1,38 @@
+﻿@model LamaWMS.Domain.Entities.Cell
+
+@{
+    ViewData["Title"] = "Удаление ячейки";
+}
+
+<h1>Удаление ячейки</h1>
+
+<div asp-validation-summary="All"
+     class="text-danger mb-3">
+</div>
+
+<p>
+    Удалить ячейку <strong>@Model.Code</strong>?
+</p>
+
+@if (Model.Rolls.Any())
+{
+    <div class="alert alert-warning">
+        В ячейке находятся рулоны. Сначала переместите их в другие ячейки.
+    </div>
+}
+
+<form asp-action="Delete" method="post">
+
+    <input type="hidden" asp-for="Id" />
+
+    <button type="submit"
+            class="btn btn-danger"
+            disabled="@Model.Rolls.Any()">
+        Удалить
+    </button>
+
+    <a asp-action="Index"
+       class="btn btn-secondary">
+        Назад
+    </a>
+</form>

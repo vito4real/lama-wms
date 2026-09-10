@@ -1,0 +1,73 @@
+﻿@model LamaWMS.Domain.Entities.Fabric
+
+@{
+    ViewData["Title"] = "Ткань " + Model.Name;
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1>@Model.Name</h1>
+        <div class="text-muted">
+            Цвет: @Model.Color
+        </div>
+    </div>
+
+    <a asp-action="Index" class="btn btn-secondary">
+        Назад
+    </a>
+</div>
+
+@if (!Model.Rolls.Any())
+{
+    <div class="alert alert-light border">
+        Для этой ткани рулоны отсутствуют.
+    </div>
+}
+else
+{
+    <table class="table table-striped table-hover align-middle">
+        <thead>
+            <tr>
+                <th>Рулон</th>
+                <th>Ячейка</th>
+                <th>Начальная длина</th>
+                <th>Остаток</th>
+                <th></th>
+            </tr>
+        </thead>
+
+        <tbody>
+            @foreach (var roll in Model.Rolls.OrderBy(x => x.Number))
+            {
+                <tr>
+                    <td>
+                        <strong>@roll.Number</strong>
+                    </td>
+
+                    <td>
+                        @(roll.Cell?.Code ?? "Не размещён")
+                    </td>
+
+                    <td>
+                        @roll.InitialLength.ToString("0.00") м
+                    </td>
+
+                    <td>
+                        <strong>
+                            @roll.CurrentLength.ToString("0.00") м
+                        </strong>
+                    </td>
+
+                    <td class="text-end">
+                        <a asp-controller="Rolls"
+                           asp-action="Details"
+                           asp-route-id="@roll.Id"
+                           class="btn btn-sm btn-outline-secondary">
+                            Открыть
+                        </a>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}

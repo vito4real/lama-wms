@@ -1,0 +1,60 @@
+﻿@model LamaWMS.Domain.Entities.Roll
+
+@{
+    ViewData["Title"] = "Новый рулон";
+}
+
+<h1>Новый рулон</h1>
+
+<form asp-action="Create" method="post">
+
+    <div class="mb-3">
+        <label asp-for="Number" class="form-label">Номер рулона</label>
+        <input asp-for="Number" class="form-control" />
+        <span asp-validation-for="Number" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="FabricId" class="form-label">Ткань</label>
+        <select asp-for="FabricId"
+                asp-items="ViewBag.FabricId"
+                class="form-select">
+            <option value="">-- выберите ткань --</option>
+        </select>
+        <span asp-validation-for="FabricId" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="InitialLength" class="form-label">
+            Начальная длина, м
+        </label>
+
+        <input asp-for="InitialLength"
+               class="form-control"
+               step="0.01" />
+
+        <span asp-validation-for="InitialLength"
+              class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="CellId" class="form-label">Ячейка</label>
+
+        <select asp-for="CellId"
+                asp-items="ViewBag.CellId"
+                class="form-select">
+            <option value="">-- без ячейки --</option>
+        </select>
+
+        <span asp-validation-for="CellId"
+              class="text-danger"></span>
+    </div>
+
+    <button type="submit" class="btn btn-primary">
+        Создать
+    </button>
+
+    <a asp-action="Index" class="btn btn-secondary">
+        Назад
+    </a>
+</form>
