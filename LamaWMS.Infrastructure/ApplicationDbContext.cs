@@ -19,6 +19,7 @@ public class ApplicationDbContext : DbContext
     public DbSet<Product> Products => Set<Product>();
     public DbSet<ProductFabric> ProductFabrics => Set<ProductFabric>();
     public DbSet<RollTransaction> RollTransactions => Set<RollTransaction>();
+    public DbSet<RollReservation> RollReservations => Set<RollReservation>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -31,6 +32,7 @@ public class ApplicationDbContext : DbContext
         ConfigureProduct(modelBuilder);
         ConfigureProductFabric(modelBuilder);
         ConfigureRollTransaction(modelBuilder);
+        ConfigureRollReservation(modelBuilder);
     }
 
     private static void ConfigureFabric(ModelBuilder modelBuilder)
@@ -179,6 +181,27 @@ public class ApplicationDbContext : DbContext
                 .WithMany(x => x.RollTransactions)
                 .HasForeignKey(x => x.ProductId)
                 .OnDelete(DeleteBehavior.SetNull);
+        });
+    }
+
+    private static void ConfigureRollReservation(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<RollReservation>(entity =>
+        {
+            entity.HasKey(x => x.Id);
+
+            entity.Property(x => x.ReservedLength)
+                .HasPrecision(10, 2);
+
+            entity.HasOne(x => x.Roll)
+                .WithMany(x => x.Reservations)
+                .HasForeignKey(x => x.RollId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(x => x.ProductFabric)
+                .WithMany(x => x.RollReservations)
+                .HasForeignKey(x => x.ProductFabricId)
+                .OnDelete(DeleteBehavior.Cascade);
         });
     }
 }

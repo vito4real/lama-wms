@@ -205,6 +205,34 @@ namespace LamaWMS.Infrastructure.Migrations
                     b.ToTable("RollTransactions");
                 });
 
+            modelBuilder.Entity("RollReservation", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("ProductFabricId")
+                        .HasColumnType("uuid");
+
+                    b.Property<decimal>("ReservedLength")
+                        .HasPrecision(10, 2)
+                        .HasColumnType("numeric(10,2)");
+
+                    b.Property<Guid>("RollId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ProductFabricId");
+
+                    b.HasIndex("RollId");
+
+                    b.ToTable("RollReservations");
+                });
+
             modelBuilder.Entity("LamaWMS.Domain.Entities.Product", b =>
                 {
                     b.HasOne("LamaWMS.Domain.Entities.Order", "Order")
@@ -271,6 +299,25 @@ namespace LamaWMS.Infrastructure.Migrations
                     b.Navigation("Roll");
                 });
 
+            modelBuilder.Entity("RollReservation", b =>
+                {
+                    b.HasOne("LamaWMS.Domain.Entities.ProductFabric", "ProductFabric")
+                        .WithMany("RollReservations")
+                        .HasForeignKey("ProductFabricId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("LamaWMS.Domain.Entities.Roll", "Roll")
+                        .WithMany("Reservations")
+                        .HasForeignKey("RollId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("ProductFabric");
+
+                    b.Navigation("Roll");
+                });
+
             modelBuilder.Entity("LamaWMS.Domain.Entities.Cell", b =>
                 {
                     b.Navigation("Rolls");
@@ -295,8 +342,15 @@ namespace LamaWMS.Infrastructure.Migrations
                     b.Navigation("RollTransactions");
                 });
 
+            modelBuilder.Entity("LamaWMS.Domain.Entities.ProductFabric", b =>
+                {
+                    b.Navigation("RollReservations");
+                });
+
             modelBuilder.Entity("LamaWMS.Domain.Entities.Roll", b =>
                 {
+                    b.Navigation("Reservations");
+
                     b.Navigation("Transactions");
                 });
 #pragma warning restore 612, 618

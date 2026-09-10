@@ -25,4 +25,8 @@ public class Roll
     [ValidateNever]
     public ICollection<RollTransaction> Transactions { get; set; }
         = new List<RollTransaction>();
+
+    [ValidateNever]
+    public ICollection<RollReservation> Reservations { get; set; }
+    = new List<RollReservation>();
 }

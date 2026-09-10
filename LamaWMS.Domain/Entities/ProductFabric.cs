@@ -15,4 +15,7 @@ public class ProductFabric
     public Fabric Fabric { get; set; } = null!;
 
     public decimal RequiredLength { get; set; }
+
+    public ICollection<RollReservation> RollReservations { get; set; }
+        = new List<RollReservation>();
 }
