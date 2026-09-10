@@ -173,7 +173,7 @@ public class ApplicationDbContext : DbContext
             entity.HasOne(x => x.Roll)
                 .WithMany(x => x.Transactions)
                 .HasForeignKey(x => x.RollId)
-                .OnDelete(DeleteBehavior.Restrict);
+                .OnDelete(DeleteBehavior.Cascade);
 
             entity.HasOne(x => x.Product)
                 .WithMany(x => x.RollTransactions)

@@ -263,7 +263,7 @@ namespace LamaWMS.Infrastructure.Migrations
                     b.HasOne("LamaWMS.Domain.Entities.Roll", "Roll")
                         .WithMany("Transactions")
                         .HasForeignKey("RollId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("Product");
