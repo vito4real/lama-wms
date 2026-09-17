@@ -19,7 +19,6 @@ public class FabricsController : Controller
         var fabrics = await _context.Fabrics
         .Include(x => x.Rolls)
         .OrderBy(x => x.Name)
-        .ThenBy(x => x.Color)
         .ToListAsync();
 
         return View(fabrics);

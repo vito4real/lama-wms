@@ -44,10 +44,6 @@ public class ApplicationDbContext : DbContext
             entity.Property(x => x.Name)
                 .HasMaxLength(200)
                 .IsRequired();
-
-            entity.Property(x => x.Color)
-                .HasMaxLength(100)
-                .IsRequired();
         });
     }
 

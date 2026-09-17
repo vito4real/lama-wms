@@ -9,7 +9,7 @@
         <h1>Рулон @Model.Number</h1>
 
         <div class="text-muted">
-            @Model.Fabric.Name — @Model.Fabric.Color
+            @Model.Fabric.Name
         </div>
     </div>
 
@@ -29,18 +29,6 @@
 
             <strong>
                 @Model.Fabric.Name
-            </strong>
-        </div>
-    </div>
-
-    <div class="col-md-3">
-        <div class="border rounded p-3">
-            <div class="text-muted">
-                Цвет
-            </div>
-
-            <strong>
-                @Model.Fabric.Color
             </strong>
         </div>
     </div>
@@ -199,10 +187,6 @@ else
                            asp-route-id="@reservation.ProductFabric.ProductId">
                             <strong>@reservation.ProductFabric.Product.Name</strong>
                         </a>
-                    </td>
-
-                    <td>
-                        @Model.Fabric.Name — @Model.Fabric.Color
                     </td>
 
                     <td>

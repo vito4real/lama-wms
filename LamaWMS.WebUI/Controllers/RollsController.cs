@@ -165,11 +165,10 @@ public class RollsController : Controller
     {
         var fabrics = await _context.Fabrics
             .OrderBy(x => x.Name)
-            .ThenBy(x => x.Color)
             .Select(x => new
             {
                 x.Id,
-                DisplayName = x.Name + " — " + x.Color
+                DisplayName = x.Name
             })
             .ToListAsync();
 
