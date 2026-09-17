@@ -129,6 +129,7 @@ else
                                 <th>Рулон</th>
                                 <th>Ячейка</th>
                                 <th>Зарезервировано</th>
+                                <th></th>
                             </tr>
                         </thead>
 
@@ -146,6 +147,24 @@ else
 
                                     <td>
                                         @reservation.ReservedLength.ToString("0.00") м
+                                    </td>
+
+                                    <td class="text-end">
+                                        <form asp-controller="RollReservations"
+                                              asp-action="Delete"
+                                              method="post">
+
+                                            @Html.AntiForgeryToken()
+
+                                            <input type="hidden"
+                                                   name="id"
+                                                   value="@reservation.Id" />
+
+                                            <button type="submit"
+                                                    class="btn btn-sm btn-outline-danger">
+                                                Снять резерв
+                                            </button>
+                                        </form>
                                     </td>
                                 </tr>
                             }

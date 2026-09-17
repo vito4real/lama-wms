@@ -35,6 +35,10 @@ public class RollsController : Controller
             .Include(x => x.Fabric)
             .Include(x => x.Cell)
             .Include(x => x.Transactions)
+                .ThenInclude(x => x.Product)
+            .Include(x => x.Reservations)
+                .ThenInclude(x => x.ProductFabric)
+                    .ThenInclude(x => x.Product)
             .FirstOrDefaultAsync(x => x.Id == id);
 
         if (roll == null)

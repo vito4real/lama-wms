@@ -136,3 +136,104 @@ else
         </tbody>
     </table>
 }
+
+@{
+    var reservedLength = Model.Reservations.Sum(x => x.ReservedLength);
+    var availableLength = Model.CurrentLength - reservedLength;
+}
+
+<div class="card mb-4">
+    <div class="card-header">
+        <strong>Состояние рулона</strong>
+    </div>
+
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-4">
+                <div class="text-muted">Физический остаток</div>
+                <strong>@Model.CurrentLength.ToString("0.00") м</strong>
+            </div>
+
+            <div class="col-md-4">
+                <div class="text-muted">Зарезервировано</div>
+                <strong>@reservedLength.ToString("0.00") м</strong>
+            </div>
+
+            <div class="col-md-4">
+                <div class="text-muted">Доступно</div>
+                <strong>@availableLength.ToString("0.00") м</strong>
+            </div>
+        </div>
+    </div>
+</div>
+
+<h4 class="mb-3">Резервы</h4>
+
+@if (!Model.Reservations.Any())
+{
+    <div class="alert alert-light border">
+        Рулон ни под одно изделие не зарезервирован.
+    </div>
+}
+else
+{
+    <table class="table table-striped table-hover align-middle">
+        <thead>
+            <tr>
+                <th>Изделие</th>
+                <th>Ткань</th>
+                <th>Зарезервировано</th>
+                <th>Дата резерва</th>
+                <th></th>
+            </tr>
+        </thead>
+
+        <tbody>
+            @foreach (var reservation in Model.Reservations
+                .OrderByDescending(x => x.CreatedAt))
+            {
+                <tr>
+                    <td>
+                        <a asp-controller="Products"
+                           asp-action="Details"
+                           asp-route-id="@reservation.ProductFabric.ProductId">
+                            <strong>@reservation.ProductFabric.Product.Name</strong>
+                        </a>
+                    </td>
+
+                    <td>
+                        @Model.Fabric.Name — @Model.Fabric.Color
+                    </td>
+
+                    <td>
+                        <strong>
+                            @reservation.ReservedLength.ToString("0.00") м
+                        </strong>
+                    </td>
+
+                    <td>
+                        @reservation.CreatedAt.ToLocalTime().ToString("dd.MM.yyyy HH:mm")
+                    </td>
+
+                    <td class="text-end">
+                        <form asp-controller="RollReservations"
+                              asp-action="Delete"
+                              method="post">
+
+                            @Html.AntiForgeryToken()
+
+                            <input type="hidden"
+                                   name="id"
+                                   value="@reservation.Id" />
+
+                            <button type="submit"
+                                    class="btn btn-sm btn-outline-danger">
+                                Снять резерв
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
