@@ -1,4 +1,5 @@
 ﻿using LamaWMS.Domain.Entities;
+using LamaWMS.Domain.Enums;
 using LamaWMS.Infrastructure;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
@@ -69,10 +70,23 @@ public class RollsController : Controller
 
         roll.Id = Guid.NewGuid();
 
-        // При создании рулона текущий остаток равен начальному.
+        // При создании рулона текущий остаток
+        // равен его начальной длине.
         roll.CurrentLength = roll.InitialLength;
 
         _context.Rolls.Add(roll);
+
+        // Первичное поступление рулона также является
+        // физическим движением ткани и фиксируется в истории.
+        _context.RollTransactions.Add(new RollTransaction
+        {
+            Id = Guid.NewGuid(),
+            RollId = roll.Id,
+            Type = RollTransactionType.Receipt,
+            Length = roll.InitialLength,
+            CreatedAt = DateTime.UtcNow,
+            Comment = "Первичный приход рулона"
+        });
 
         await _context.SaveChangesAsync();
 
@@ -98,34 +112,78 @@ public class RollsController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Edit(Guid id, Roll roll)
+    public async Task<IActionResult> Edit(
+    Guid id,
+    string number,
+    Guid fabricId,
+    Guid? cellId)
     {
-        if (id != roll.Id)
+        var roll = await _context.Rolls
+            .FirstOrDefaultAsync(x => x.Id == id);
+
+        if (roll == null)
             return NotFound();
+
+        if (string.IsNullOrWhiteSpace(number))
+        {
+            ModelState.AddModelError(
+                nameof(Roll.Number),
+                "Укажите номер рулона.");
+        }
+
+        var fabricExists = await _context.Fabrics
+            .AnyAsync(x => x.Id == fabricId);
+
+        if (!fabricExists)
+        {
+            ModelState.AddModelError(
+                nameof(Roll.FabricId),
+                "Выбранная ткань не найдена.");
+        }
+
+        if (cellId.HasValue)
+        {
+            var cellExists = await _context.Cells
+                .AnyAsync(x => x.Id == cellId.Value);
+
+            if (!cellExists)
+            {
+                ModelState.AddModelError(
+                    nameof(Roll.CellId),
+                    "Выбранная ячейка не найдена.");
+            }
+        }
 
         if (!ModelState.IsValid)
         {
+            // Возвращаем введённые пользователем значения,
+            // но учётные остатки берём только из базы данных.
+            roll.Number = number;
+            roll.FabricId = fabricId;
+            roll.CellId = cellId;
+
             await LoadSelectListsAsync(
-                roll.FabricId,
-                roll.CellId);
+                fabricId,
+                cellId);
 
             return View(roll);
         }
 
-        try
-        {
-            _context.Update(roll);
-            await _context.SaveChangesAsync();
-        }
-        catch (DbUpdateConcurrencyException)
-        {
-            if (!_context.Rolls.Any(x => x.Id == roll.Id))
-                return NotFound();
+        // Через обычное редактирование разрешено менять
+        // только реквизиты рулона.
+        roll.Number = number.Trim();
+        roll.FabricId = fabricId;
+        roll.CellId = cellId;
 
-            throw;
-        }
+        // InitialLength и CurrentLength здесь намеренно
+        // не изменяются. Остаток меняется только
+        // складскими операциями через RollTransaction.
 
-        return RedirectToAction(nameof(Index));
+        await _context.SaveChangesAsync();
+
+        return RedirectToAction(
+            nameof(Details),
+            new { id = roll.Id });
     }
 
     public async Task<IActionResult> Delete(Guid? id)

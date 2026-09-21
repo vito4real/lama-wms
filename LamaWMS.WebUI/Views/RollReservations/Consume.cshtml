@@ -1,0 +1,89 @@
+﻿@model RollReservation
+
+@{
+    ViewData["Title"] = "Списание ткани";
+}
+
+<h1>Списание ткани в производство</h1>
+
+<div class="card mb-4">
+    <div class="card-body">
+
+        <div class="row">
+            <div class="col-md-3">
+                <div class="text-muted">Изделие</div>
+                <strong>
+                    @Model.ProductFabric.Product.Name
+                </strong>
+            </div>
+
+            <div class="col-md-3">
+                <div class="text-muted">Рулон</div>
+                <strong>
+                    @Model.Roll.Number
+                </strong>
+            </div>
+
+            <div class="col-md-3">
+                <div class="text-muted">Физический остаток</div>
+                <strong>
+                    @Model.Roll.CurrentLength.ToString("0.00") м
+                </strong>
+            </div>
+
+            <div class="col-md-3">
+                <div class="text-muted">Зарезервировано</div>
+                <strong>
+                    @Model.ReservedLength.ToString("0.00") м
+                </strong>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger">
+        @TempData["Error"]
+    </div>
+}
+
+<form asp-action="Consume"
+      method="post">
+
+    @Html.AntiForgeryToken()
+
+    <input type="hidden"
+           name="id"
+           value="@Model.Id" />
+
+    <div class="mb-3">
+        <label class="form-label">
+            Фактически использовано, м
+        </label>
+
+        <input type="number"
+               name="consumedLength"
+               value="@Model.ReservedLength.ToString(System.Globalization.CultureInfo.InvariantCulture)"
+               min="0.01"
+               max="@Model.ReservedLength.ToString(System.Globalization.CultureInfo.InvariantCulture)"
+               step="0.01"
+               class="form-control"
+               style="max-width: 300px;"
+               required />
+    </div>
+
+    <button type="submit"
+            class="btn btn-danger">
+        Списать в производство
+    </button>
+
+    <a asp-controller="Rolls"
+       asp-action="Details"
+       asp-route-id="@Model.RollId"
+       class="btn btn-secondary">
+        Отмена
+    </a>
+
+</form>

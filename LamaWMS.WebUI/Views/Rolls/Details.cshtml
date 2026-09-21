@@ -1,4 +1,6 @@
-﻿@model LamaWMS.Domain.Entities.Roll
+﻿@using LamaWMS.Domain.Enums
+
+@model LamaWMS.Domain.Entities.Roll
 
 @{
     ViewData["Title"] = "Рулон " + Model.Number;
@@ -71,12 +73,42 @@
 
 </div>
 
-<div class="mb-3">
+<div class="d-flex gap-2 flex-wrap mb-4">
+
     <a asp-action="Edit"
        asp-route-id="@Model.Id"
        class="btn btn-primary">
         Изменить
     </a>
+
+    <a asp-controller="RollTransactions"
+       asp-action="Receipt"
+       asp-route-rollId="@Model.Id"
+       class="btn btn-success">
+        Приход
+    </a>
+
+    <a asp-controller="RollTransactions"
+       asp-action="Return"
+       asp-route-rollId="@Model.Id"
+       class="btn btn-outline-success">
+        Возврат
+    </a>
+
+    <a asp-controller="RollTransactions"
+       asp-action="WriteOff"
+       asp-route-rollId="@Model.Id"
+       class="btn btn-outline-danger">
+        Списание
+    </a>
+
+    <a asp-controller="RollTransactions"
+       asp-action="Adjustment"
+       asp-route-rollId="@Model.Id"
+       class="btn btn-outline-warning">
+        Корректировка
+    </a>
+
 </div>
 
 <h4>История операций</h4>
@@ -113,7 +145,28 @@ else
                     </td>
 
                     <td>
-                        @transaction.Length.ToString("0.00") м
+                        @switch (transaction.Type)
+                        {
+                            case RollTransactionType.Receipt:
+                            case RollTransactionType.Return:
+                                <span>
+                                    +@transaction.Length.ToString("0.00") м
+                                </span>
+                                break;
+
+                            case RollTransactionType.Consumption:
+                            case RollTransactionType.WriteOff:
+                                <span>
+                                    -@transaction.Length.ToString("0.00") м
+                                </span>
+                                break;
+
+                            case RollTransactionType.Adjustment:
+                                <span>
+                                    @(transaction.Length > 0 ? "+" : "")@transaction.Length.ToString("0.00") м
+                                </span>
+                                break;
+                        }
                     </td>
 
                     <td>
@@ -198,21 +251,33 @@ else
                     </td>
 
                     <td class="text-end">
-                        <form asp-controller="RollReservations"
-                              asp-action="Delete"
-                              method="post">
+                        <div class="d-flex justify-content-end gap-2">
 
-                            @Html.AntiForgeryToken()
+                            <a asp-controller="RollReservations"
+                               asp-action="Consume"
+                               asp-route-id="@reservation.Id"
+                               class="btn btn-sm btn-danger">
+                                Списать в производство
+                            </a>
 
-                            <input type="hidden"
-                                   name="id"
-                                   value="@reservation.Id" />
+                            <form asp-controller="RollReservations"
+                                  asp-action="Delete"
+                                  method="post">
 
-                            <button type="submit"
-                                    class="btn btn-sm btn-outline-danger">
-                                Снять резерв
-                            </button>
-                        </form>
+                                @Html.AntiForgeryToken()
+
+                                <input type="hidden"
+                                       name="id"
+                                       value="@reservation.Id" />
+
+                                <button type="submit"
+                                        class="btn btn-sm btn-outline-danger">
+                                    Снять резерв
+                                </button>
+
+                            </form>
+
+                        </div>
                     </td>
                 </tr>
             }

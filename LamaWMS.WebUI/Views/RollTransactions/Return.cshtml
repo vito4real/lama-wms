@@ -1,0 +1,66 @@
+﻿@model LamaWMS.Domain.Entities.Roll
+
+@{
+    ViewData["Title"] = "Возврат ткани";
+}
+
+<h1>Возврат ткани</h1>
+
+<div class="alert alert-light border">
+    <strong>Рулон:</strong> @Model.Number<br />
+    <strong>Ткань:</strong> @Model.Fabric.Name<br />
+    <strong>Текущий остаток:</strong> @Model.CurrentLength.ToString("0.00") м
+</div>
+
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger">
+        @TempData["Error"]
+    </div>
+}
+
+<form asp-action="Return" method="post">
+
+    @Html.AntiForgeryToken()
+
+    <input type="hidden"
+           name="rollId"
+           value="@Model.Id" />
+
+    <div class="mb-3">
+        <label class="form-label">
+            Возвращено, м
+        </label>
+
+        <input type="number"
+               name="length"
+               min="0.01"
+               step="0.01"
+               class="form-control"
+               style="max-width: 300px;"
+               required />
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">
+            Комментарий
+        </label>
+
+        <textarea name="comment"
+                  class="form-control"
+                  rows="3"></textarea>
+    </div>
+
+    <button type="submit"
+            class="btn btn-success">
+        Вернуть на склад
+    </button>
+
+    <a asp-controller="Rolls"
+       asp-action="Details"
+       asp-route-id="@Model.Id"
+       class="btn btn-secondary">
+        Отмена
+    </a>
+
+</form>

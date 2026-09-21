@@ -2,6 +2,7 @@
 using LamaWMS.Infrastructure;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using LamaWMS.Domain.Enums;
 
 namespace LamaWMS.WebUI.Controllers;
 
@@ -128,6 +129,99 @@ public class RollReservationsController : Controller
             "Details",
             "Products",
             new { id = productFabric.ProductId });
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> Consume(Guid id)
+    {
+        var reservation = await _context.RollReservations
+            .Include(x => x.Roll)
+                .ThenInclude(x => x.Fabric)
+            .Include(x => x.ProductFabric)
+                .ThenInclude(x => x.Product)
+            .FirstOrDefaultAsync(x => x.Id == id);
+
+        if (reservation == null)
+            return NotFound();
+
+        return View(reservation);
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Consume(Guid id, decimal consumedLength)
+    {
+        var reservation = await _context.RollReservations
+            .Include(x => x.Roll)
+            .Include(x => x.ProductFabric)
+                .ThenInclude(x => x.Product)
+            .FirstOrDefaultAsync(x => x.Id == id);
+
+        if (reservation == null)
+            return NotFound();
+
+        if (consumedLength <= 0)
+        {
+            TempData["Error"] =
+                "Количество для списания должно быть больше 0.";
+
+            return RedirectToAction(
+                nameof(Consume),
+                new { id });
+        }
+
+        if (consumedLength > reservation.ReservedLength)
+        {
+            TempData["Error"] =
+                $"Зарезервировано только {reservation.ReservedLength:0.00} м.";
+
+            return RedirectToAction(
+                nameof(Consume),
+                new { id });
+        }
+
+        if (consumedLength > reservation.Roll.CurrentLength)
+        {
+            TempData["Error"] =
+                $"Физический остаток рулона составляет только {reservation.Roll.CurrentLength:0.00} м.";
+
+            return RedirectToAction(
+                nameof(Consume),
+                new { id });
+        }
+
+        // Физически уменьшаем остаток ткани на рулоне.
+        reservation.Roll.CurrentLength -= consumedLength;
+
+        // Уменьшаем резерв на фактически использованное количество.
+        reservation.ReservedLength -= consumedLength;
+
+        // Фиксируем физическое движение ткани.
+        var transaction = new RollTransaction
+        {
+            Id = Guid.NewGuid(),
+            RollId = reservation.RollId,
+            ProductId = reservation.ProductFabric.ProductId,
+            Type = RollTransactionType.Consumption,
+            Length = consumedLength,
+            CreatedAt = DateTime.UtcNow,
+            Comment = $"Списание в производство по изделию \"{reservation.ProductFabric.Product.Name}\""
+        };
+
+        _context.RollTransactions.Add(transaction);
+
+        // Если весь резерв израсходован — резерв больше не нужен.
+        if (reservation.ReservedLength == 0)
+        {
+            _context.RollReservations.Remove(reservation);
+        }
+
+        await _context.SaveChangesAsync();
+
+        return RedirectToAction(
+            "Details",
+            "Rolls",
+            new { id = reservation.RollId });
     }
 
     [HttpPost]

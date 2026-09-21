@@ -42,32 +42,35 @@
         </span>
     </div>
 
-    <div class="mb-3">
-        <label asp-for="InitialLength" class="form-label">
-            Начальная длина, м
-        </label>
+    <div class="row mb-3">
+        <div class="col-md-6">
+            <div class="border rounded p-3">
+                <div class="text-muted">
+                    Начальная длина
+                </div>
 
-        <input asp-for="InitialLength"
-               class="form-control"
-               step="0.01" />
+                <strong>
+                    @Model.InitialLength.ToString("0.00") м
+                </strong>
+            </div>
+        </div>
 
-        <span asp-validation-for="InitialLength"
-              class="text-danger">
-        </span>
+        <div class="col-md-6">
+            <div class="border rounded p-3">
+                <div class="text-muted">
+                    Текущий остаток
+                </div>
+
+                <strong>
+                    @Model.CurrentLength.ToString("0.00") м
+                </strong>
+            </div>
+        </div>
     </div>
 
-    <div class="mb-3">
-        <label asp-for="CurrentLength" class="form-label">
-            Текущий остаток, м
-        </label>
-
-        <input asp-for="CurrentLength"
-               class="form-control"
-               step="0.01" />
-
-        <span asp-validation-for="CurrentLength"
-              class="text-danger">
-        </span>
+    <div class="alert alert-light border">
+        Остаток рулона изменяется складскими операциями
+        и не может быть отредактирован вручную.
     </div>
 
     <div class="mb-3">
