@@ -1,9 +1,15 @@
+using LamaWMS.WebUI.ModelBinders;
 using LamaWMS.Infrastructure;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddControllersWithViews();
+builder.Services.AddControllersWithViews(options =>
+{
+    options.ModelBinderProviders.Insert(
+        0,
+        new InvariantDecimalModelBinderProvider());
+});
 
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseNpgsql(
