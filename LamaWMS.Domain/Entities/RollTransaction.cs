@@ -21,4 +21,6 @@ public class RollTransaction
     public DateTime CreatedAt { get; set; }
 
     public string? Comment { get; set; }
+
+    public string? RequestNumber { get; set; }
 }

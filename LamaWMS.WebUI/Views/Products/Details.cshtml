@@ -5,6 +5,7 @@
 }
 
 <div class="d-flex justify-content-between align-items-center mb-4">
+
     <div>
         <h1>@Model.Name</h1>
 
@@ -25,6 +26,7 @@
             Назад
         </a>
     </div>
+
 </div>
 
 @if (!Model.ProductFabrics.Any())
@@ -40,9 +42,11 @@ else
         var reserved = productFabric.RollReservations
             .Sum(x => x.ReservedLength);
 
-        var remaining = productFabric.RequiredLength - reserved;
+        var remaining =
+            productFabric.RequiredLength - reserved;
 
         <div class="card mb-3">
+
             <div class="card-body">
 
                 <div class="d-flex justify-content-between align-items-start">
@@ -51,7 +55,6 @@ else
                         <h5 class="card-title mb-1">
                             @productFabric.Fabric.Name
                         </h5>
-
                     </div>
 
                     <form asp-action="DeleteFabric"
@@ -69,11 +72,12 @@ else
                         </button>
 
                     </form>
+
                 </div>
 
                 <hr />
 
-                <div class="row">
+                <div class="row align-items-center">
 
                     <div class="col-md-3">
                         <div class="text-muted">
@@ -106,12 +110,25 @@ else
                     </div>
 
                     <div class="col-md-3 text-end">
-                        <a asp-controller="RollReservations"
-                           asp-action="Create"
-                           asp-route-productFabricId="@productFabric.Id"
-                           class="btn btn-outline-primary">
-                            Зарезервировать рулон
-                        </a>
+
+                        @if (remaining > 0)
+                        {
+                            <a asp-controller="RollReservations"
+                               asp-action="Create"
+                               asp-route-productFabricId="@productFabric.Id"
+                               class="btn btn-outline-primary">
+
+                                Зарезервировать рулон
+
+                            </a>
+                        }
+                        else
+                        {
+                            <span class="badge text-bg-success">
+                                Потребность обеспечена
+                            </span>
+                        }
+
                     </div>
 
                 </div>
@@ -120,56 +137,91 @@ else
                 {
                     <hr />
 
-                    <table class="table table-sm mb-0">
-                        <thead>
-                            <tr>
-                                <th>Рулон</th>
-                                <th>Ячейка</th>
-                                <th>Зарезервировано</th>
-                                <th></th>
-                            </tr>
-                        </thead>
+                    <div class="table-responsive">
 
-                        <tbody>
-                            @foreach (var reservation in productFabric.RollReservations)
-                            {
+                        <table class="table table-sm table-hover align-middle mb-0">
+
+                            <thead>
                                 <tr>
-                                    <td>
-                                        @reservation.Roll.Number
-                                    </td>
-
-                                    <td>
-                                        @(reservation.Roll.Cell?.Code ?? "Не размещён")
-                                    </td>
-
-                                    <td>
-                                        @reservation.ReservedLength.ToString("0.00") м
-                                    </td>
-
-                                    <td class="text-end">
-                                        <form asp-controller="RollReservations"
-                                              asp-action="Delete"
-                                              method="post">
-
-                                            @Html.AntiForgeryToken()
-
-                                            <input type="hidden"
-                                                   name="id"
-                                                   value="@reservation.Id" />
-
-                                            <button type="submit"
-                                                    class="btn btn-sm btn-outline-danger">
-                                                Снять резерв
-                                            </button>
-                                        </form>
-                                    </td>
+                                    <th>Рулон</th>
+                                    <th>Ячейка</th>
+                                    <th>№ заявки</th>
+                                    <th>Зарезервировано</th>
+                                    <th>Дата</th>
+                                    <th></th>
                                 </tr>
-                            }
-                        </tbody>
-                    </table>
+                            </thead>
+
+                            <tbody>
+
+                                @foreach (var reservation in
+                                    productFabric.RollReservations
+                                        .OrderByDescending(x => x.CreatedAt))
+                                {
+                                    <tr>
+
+                                        <td>
+                                            <a asp-controller="Rolls"
+                                               asp-action="Details"
+                                               asp-route-id="@reservation.RollId"
+                                               class="text-decoration-none fw-semibold">
+
+                                                @reservation.Roll.Number
+
+                                            </a>
+                                        </td>
+
+                                        <td>
+                                            @(reservation.Roll.Cell?.Code ?? "Не размещён")
+                                        </td>
+
+                                        <td>
+                                            <strong>
+                                                @reservation.RequestNumber
+                                            </strong>
+                                        </td>
+
+                                        <td>
+                                            @reservation.ReservedLength.ToString("0.00") м
+                                        </td>
+
+                                        <td class="text-muted text-nowrap">
+                                            @(reservation.CreatedAt.ToLocalTime().ToString("dd.MM.yyyy HH:mm"))
+                                        </td>
+
+                                        <td class="text-end">
+
+                                            <form asp-controller="RollReservations"
+                                                  asp-action="Delete"
+                                                  method="post">
+
+                                                @Html.AntiForgeryToken()
+
+                                                <input type="hidden"
+                                                       name="id"
+                                                       value="@reservation.Id" />
+
+                                                <button type="submit"
+                                                        class="btn btn-sm btn-outline-danger">
+                                                    Снять резерв
+                                                </button>
+
+                                            </form>
+
+                                        </td>
+
+                                    </tr>
+                                }
+
+                            </tbody>
+
+                        </table>
+
+                    </div>
                 }
 
             </div>
+
         </div>
     }
 }

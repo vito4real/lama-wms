@@ -23,7 +23,9 @@
         };
     }
 
-    string GetTransactionLength(RollTransactionType type, decimal length)
+    string GetTransactionLength(
+        RollTransactionType type,
+        decimal length)
     {
         return type switch
         {
@@ -47,18 +49,12 @@
     }
 }
 
-@* ============================================================
-   Шапка рулона
-   ============================================================ *@
-
 <div class="d-flex justify-content-between align-items-start mb-4">
 
     <div>
-        <div class="d-flex align-items-center gap-3">
-            <h1 class="mb-1">
-                Рулон @Model.Number
-            </h1>
-        </div>
+        <h1 class="mb-1">
+            Рулон @Model.Number
+        </h1>
 
         <div class="text-muted">
             <strong class="text-dark">
@@ -80,11 +76,6 @@
     </a>
 
 </div>
-
-
-@* ============================================================
-   Состояние рулона
-   ============================================================ *@
 
 <div class="card mb-3">
     <div class="card-body py-3">
@@ -136,11 +127,6 @@
     </div>
 </div>
 
-
-@* ============================================================
-   Действия
-   ============================================================ *@
-
 <div class="d-flex gap-2 flex-wrap mb-4">
 
     <a asp-action="Edit"
@@ -178,10 +164,6 @@
     </a>
 
 </div>
-
-@* ============================================================
-   Вкладки
-   ============================================================ *@
 
 <ul class="nav nav-tabs mb-3"
     id="rollTabs"
@@ -229,14 +211,8 @@
 
 </ul>
 
-
 <div class="tab-content"
      id="rollTabsContent">
-
-
-    @* ========================================================
-       Резервы
-       ======================================================== *@
 
     <div class="tab-pane fade show active"
          id="reservations"
@@ -257,6 +233,7 @@
                     <thead class="table-light">
                         <tr>
                             <th>Изделие</th>
+                            <th>№ заявки</th>
                             <th>Зарезервировано</th>
                             <th>Дата резерва</th>
                             <th></th>
@@ -284,14 +261,18 @@
 
                                 <td>
                                     <strong>
+                                        @reservation.RequestNumber
+                                    </strong>
+                                </td>
+
+                                <td>
+                                    <strong>
                                         @reservation.ReservedLength.ToString("0.00") м
                                     </strong>
                                 </td>
 
-                                <td class="text-muted">
-                                    @reservation.CreatedAt
-                                    .ToLocalTime()
-                                    .ToString("dd.MM.yyyy HH:mm")
+                                <td class="text-muted text-nowrap">
+                                    @(reservation.CreatedAt.ToLocalTime().ToString("dd.MM.yyyy HH:mm"))
                                 </td>
 
                                 <td class="text-end">
@@ -342,11 +323,6 @@
 
     </div>
 
-
-    @* ========================================================
-       История операций
-       ======================================================== *@
-
     <div class="tab-pane fade"
          id="transactions"
          role="tabpanel">
@@ -371,6 +347,7 @@
                                 <th>Дата</th>
                                 <th>Операция</th>
                                 <th>Длина</th>
+                                <th>№ заявки</th>
                                 <th>Изделие</th>
                                 <th>Комментарий</th>
                             </tr>
@@ -399,6 +376,19 @@
                                     </td>
 
                                     <td>
+                                        @if (!string.IsNullOrWhiteSpace(transaction.RequestNumber))
+                                        {
+                                            <strong>
+                                                @transaction.RequestNumber
+                                            </strong>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">—</span>
+                                        }
+                                    </td>
+
+                                    <td>
                                         @if (transaction.Product != null)
                                         {
                                             <a asp-controller="Products"
@@ -417,8 +407,7 @@
                                     </td>
 
                                     <td>
-                                        @if (!string.IsNullOrWhiteSpace(
-                                            transaction.Comment))
+                                        @if (!string.IsNullOrWhiteSpace(transaction.Comment))
                                         {
                                             @transaction.Comment
                                         }

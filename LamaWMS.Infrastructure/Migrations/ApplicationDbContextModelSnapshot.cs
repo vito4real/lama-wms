@@ -180,6 +180,10 @@ namespace LamaWMS.Infrastructure.Migrations
                     b.Property<Guid?>("ProductId")
                         .HasColumnType("uuid");
 
+                    b.Property<string>("RequestNumber")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
                     b.Property<Guid>("RollId")
                         .HasColumnType("uuid");
 
@@ -206,6 +210,11 @@ namespace LamaWMS.Infrastructure.Migrations
 
                     b.Property<Guid>("ProductFabricId")
                         .HasColumnType("uuid");
+
+                    b.Property<string>("RequestNumber")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
 
                     b.Property<decimal>("ReservedLength")
                         .HasPrecision(10, 2)

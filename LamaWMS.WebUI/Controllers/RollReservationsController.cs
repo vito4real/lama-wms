@@ -45,8 +45,31 @@ public class RollReservationsController : Controller
     public async Task<IActionResult> Create(
         Guid productFabricId,
         Guid rollId,
-        decimal reservedLength)
+        decimal reservedLength,
+        string requestNumber)
     {
+        requestNumber = requestNumber?.Trim() ?? string.Empty;
+
+        if (string.IsNullOrWhiteSpace(requestNumber))
+        {
+            TempData["Error"] =
+                "Необходимо указать номер заявки.";
+
+            return RedirectToAction(
+                nameof(Create),
+                new { productFabricId });
+        }
+
+        if (requestNumber.Length > 100)
+        {
+            TempData["Error"] =
+                "Номер заявки не может быть длиннее 100 символов.";
+
+            return RedirectToAction(
+                nameof(Create),
+                new { productFabricId });
+        }
+
         if (reservedLength <= 0)
         {
             TempData["Error"] = "Количество для резервирования должно быть больше 0.";
@@ -118,6 +141,7 @@ public class RollReservationsController : Controller
             Id = Guid.NewGuid(),
             RollId = rollId,
             ProductFabricId = productFabricId,
+            RequestNumber = requestNumber,
             ReservedLength = reservedLength,
             CreatedAt = DateTime.UtcNow
         };
@@ -202,10 +226,13 @@ public class RollReservationsController : Controller
             Id = Guid.NewGuid(),
             RollId = reservation.RollId,
             ProductId = reservation.ProductFabric.ProductId,
+            RequestNumber = reservation.RequestNumber,
             Type = RollTransactionType.Consumption,
             Length = consumedLength,
             CreatedAt = DateTime.UtcNow,
-            Comment = $"Списание в производство по изделию \"{reservation.ProductFabric.Product.Name}\""
+            Comment =
+                $"Списание в производство по заявке №{reservation.RequestNumber}, " +
+                $"изделие \"{reservation.ProductFabric.Product.Name}\""
         };
 
         _context.RollTransactions.Add(transaction);

@@ -15,4 +15,6 @@ public class RollReservation
     public decimal ReservedLength { get; set; }
 
     public DateTime CreatedAt { get; set; }
+
+    public string RequestNumber { get; set; } = null!;
 }

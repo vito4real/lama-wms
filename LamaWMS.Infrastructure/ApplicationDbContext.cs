@@ -163,6 +163,9 @@ public class ApplicationDbContext : DbContext
             entity.Property(x => x.Comment)
                 .HasMaxLength(500);
 
+            entity.Property(x => x.RequestNumber)
+                .HasMaxLength(100);
+
             entity.HasOne(x => x.Roll)
                 .WithMany(x => x.Transactions)
                 .HasForeignKey(x => x.RollId)
@@ -183,6 +186,10 @@ public class ApplicationDbContext : DbContext
 
             entity.Property(x => x.ReservedLength)
                 .HasPrecision(10, 2);
+
+            entity.Property(x => x.RequestNumber)
+                .HasMaxLength(100)
+                .IsRequired();
 
             entity.HasOne(x => x.Roll)
                 .WithMany(x => x.Reservations)
