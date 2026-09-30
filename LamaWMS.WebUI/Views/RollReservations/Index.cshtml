@@ -1,0 +1,186 @@
+﻿@model IEnumerable<RollReservation>
+
+@{
+    ViewData["Title"] = "Резервы ткани";
+
+    var search = ViewBag.Search as string;
+}
+
+<div class="d-flex justify-content-between align-items-start mb-4">
+
+    <div>
+        <h1 class="mb-1">Резервы ткани</h1>
+
+        <div class="text-muted">
+            Текущие активные резервы по производственным заявкам
+        </div>
+    </div>
+
+</div>
+
+
+<form asp-action="Index"
+      method="get"
+      class="mb-4">
+
+    <div class="d-flex gap-2"
+         style="max-width: 650px;">
+
+        <input type="text"
+               name="search"
+               value="@search"
+               class="form-control"
+               placeholder="№ заявки, изделие, ткань, рулон или ячейка" />
+
+        <button type="submit"
+                class="btn btn-primary">
+            Найти
+        </button>
+
+        @if (!string.IsNullOrWhiteSpace(search))
+        {
+            <a asp-action="Index"
+               class="btn btn-outline-secondary">
+                Сбросить
+            </a>
+        }
+
+    </div>
+
+</form>
+
+
+@if (!Model.Any())
+{
+    <div class="alert alert-light border">
+
+        @if (!string.IsNullOrWhiteSpace(search))
+        {
+            <span>
+                По заданным условиям резервы не найдены.
+            </span>
+        }
+        else
+        {
+            <span>
+                Активных резервов пока нет.
+            </span>
+        }
+
+    </div>
+}
+else
+{
+    <div class="card">
+
+        <div class="table-responsive">
+
+            <table class="table table-hover align-middle mb-0">
+
+                <thead class="table-light">
+
+                    <tr>
+                        <th>№ заявки</th>
+                        <th>Изделие</th>
+                        <th>Ткань</th>
+                        <th>Рулон</th>
+                        <th>Ячейка</th>
+                        <th>Зарезервировано</th>
+                        <th>Дата</th>
+                        <th></th>
+                    </tr>
+
+                </thead>
+
+                <tbody>
+
+                    @foreach (var reservation in Model)
+                    {
+                        <tr>
+
+                            <td>
+                                <strong>
+                                    @reservation.RequestNumber
+                                </strong>
+                            </td>
+
+                            <td>
+                                <a asp-controller="Products"
+                                   asp-action="Details"
+                                   asp-route-id="@reservation.ProductFabric.ProductId"
+                                   class="text-decoration-none">
+
+                                    @reservation.ProductFabric.Product.Name
+
+                                </a>
+                            </td>
+
+                            <td>
+                                @reservation.ProductFabric.Fabric.Name
+                            </td>
+
+                            <td>
+                                <a asp-controller="Rolls"
+                                   asp-action="Details"
+                                   asp-route-id="@reservation.RollId"
+                                   class="text-decoration-none fw-semibold">
+
+                                    @reservation.Roll.Number
+
+                                </a>
+                            </td>
+
+                            <td>
+                                @(reservation.Roll.Cell?.Code ?? "Не размещён")
+                            </td>
+
+                            <td>
+                                <strong>
+                                    @reservation.ReservedLength.ToString("0.00") м
+                                </strong>
+                            </td>
+
+                            <td class="text-muted text-nowrap">
+                                @(reservation.CreatedAt
+                                    .ToLocalTime()
+                                    .ToString("dd.MM.yyyy HH:mm"))
+                            </td>
+
+                            <td class="text-end text-nowrap">
+
+                                <a asp-action="Consume"
+                                   asp-route-id="@reservation.Id"
+                                   class="btn btn-sm btn-outline-primary">
+                                    В производство
+                                </a>
+
+                                <form asp-action="Delete"
+                                      method="post"
+                                      class="d-inline">
+
+                                    @Html.AntiForgeryToken()
+
+                                    <input type="hidden"
+                                           name="id"
+                                           value="@reservation.Id" />
+
+                                    <button type="submit"
+                                            class="btn btn-sm btn-outline-danger">
+                                        Снять
+                                    </button>
+
+                                </form>
+
+                            </td>
+
+                        </tr>
+                    }
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </div>
+}

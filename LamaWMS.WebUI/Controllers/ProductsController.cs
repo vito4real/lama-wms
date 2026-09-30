@@ -34,10 +34,6 @@ public class ProductsController : Controller
         var product = await _context.Products
             .Include(x => x.ProductFabrics)
                 .ThenInclude(x => x.Fabric)
-            .Include(x => x.ProductFabrics)
-                .ThenInclude(x => x.RollReservations)
-                    .ThenInclude(x => x.Roll)
-                        .ThenInclude(x => x.Cell)
             .FirstOrDefaultAsync(x => x.Id == id);
 
         if (product == null)

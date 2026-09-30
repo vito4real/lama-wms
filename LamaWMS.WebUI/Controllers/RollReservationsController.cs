@@ -16,7 +16,43 @@ public class RollReservationsController : Controller
     }
 
     [HttpGet]
-    public async Task<IActionResult> Create(Guid productId)
+    public async Task<IActionResult> Index(string? search)
+    {
+        var query = _context.RollReservations
+            .Include(x => x.Roll)
+                .ThenInclude(x => x.Cell)
+            .Include(x => x.ProductFabric)
+                .ThenInclude(x => x.Product)
+            .Include(x => x.ProductFabric)
+                .ThenInclude(x => x.Fabric)
+            .AsQueryable();
+
+        if (!string.IsNullOrWhiteSpace(search))
+        {
+            search = search.Trim();
+
+            query = query.Where(x =>
+                x.RequestNumber.Contains(search) ||
+                x.ProductFabric.Product.Name.Contains(search) ||
+                x.ProductFabric.Fabric.Name.Contains(search) ||
+                x.Roll.Number.Contains(search) ||
+                (x.Roll.Cell != null &&
+                 x.Roll.Cell.Code.Contains(search)));
+        }
+
+        var reservations = await query
+            .OrderByDescending(x => x.CreatedAt)
+            .ToListAsync();
+
+        ViewBag.Search = search;
+
+        return View(reservations);
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> Create(
+    Guid productId,
+    string? requestNumber)
     {
         var product = await _context.Products
             .Include(x => x.ProductFabrics)
@@ -42,6 +78,7 @@ public class RollReservationsController : Controller
 
         ViewBag.Product = product;
         ViewBag.Rolls = rolls;
+        ViewBag.RequestNumber = requestNumber?.Trim();
 
         return View();
     }
@@ -196,13 +233,14 @@ public class RollReservationsController : Controller
          */
         foreach (var productFabric in product.ProductFabrics)
         {
-            var alreadyReserved =
+            var alreadyReservedForRequest =
                 productFabric.RollReservations
-                    .Sum(x => x.ReservedLength);
+                .Where(x => x.RequestNumber == requestNumber)
+                .Sum(x => x.ReservedLength);
 
             var remainingNeed =
                 productFabric.RequiredLength -
-                alreadyReserved;
+                alreadyReservedForRequest;
 
             var newReserved =
                 newReservations
@@ -214,6 +252,7 @@ public class RollReservationsController : Controller
             {
                 TempData["Error"] =
                     $"Для ткани \"{productFabric.Fabric.Name}\" " +
+                    $"по заявке №{requestNumber} " +
                     $"осталось зарезервировать только " +
                     $"{remainingNeed:0.00} м.";
 
@@ -357,9 +396,6 @@ public class RollReservationsController : Controller
         _context.RollReservations.Remove(reservation);
         await _context.SaveChangesAsync();
 
-        return RedirectToAction(
-            "Details",
-            "Products",
-            new { id = productId });
+        return RedirectToAction(nameof(Index));
     }
 }
