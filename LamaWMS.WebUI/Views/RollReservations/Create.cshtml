@@ -3,79 +3,33 @@
 @{
     ViewData["Title"] = "Резервирование ткани";
 
-    var productFabric =
-        (ProductFabric)ViewBag.ProductFabric;
+    var product =
+        (Product)ViewBag.Product;
 
     var rolls =
         (List<Roll>)ViewBag.Rolls;
-
-    var alreadyReserved =
-        productFabric.RollReservations.Sum(x => x.ReservedLength);
-
-    var remainingNeed =
-        productFabric.RequiredLength - alreadyReserved;
 }
 
 <div class="d-flex justify-content-between align-items-start mb-4">
+
     <div>
         <h1>Резервирование ткани</h1>
 
         <div class="text-muted">
             Изделие:
-            <strong>@productFabric.Product.Name</strong>
+            <strong>@product.Name</strong>
         </div>
     </div>
 
     <a asp-controller="Products"
        asp-action="Details"
-       asp-route-id="@productFabric.ProductId"
+       asp-route-id="@product.Id"
        class="btn btn-secondary">
         Назад
     </a>
+
 </div>
 
-<div class="card mb-4">
-    <div class="card-body">
-
-        <h4 class="mb-3">
-            @productFabric.Fabric.Name
-        </h4>
-
-        <div class="row">
-
-            <div class="col-md-4">
-                <div class="text-muted">
-                    Требуется
-                </div>
-
-                <strong>
-                    @productFabric.RequiredLength.ToString("0.00") м
-                </strong>
-            </div>
-
-            <div class="col-md-4">
-                <div class="text-muted">
-                    Уже зарезервировано
-                </div>
-
-                <strong>
-                    @alreadyReserved.ToString("0.00") м
-                </strong>
-            </div>
-
-            <div class="col-md-4">
-                <div class="text-muted">
-                    Осталось зарезервировать
-                </div>
-
-                <strong>
-                    @remainingNeed.ToString("0.00") м
-                </strong>
-            </div>
-
-        </div>
-    </div>
-</div>
 
 @if (TempData["Error"] != null)
 {
@@ -84,133 +38,281 @@
     </div>
 }
 
-<h4 class="mb-3">
-    Доступные рулоны
-</h4>
 
-@if (!rolls.Any())
-{
-    <div class="alert alert-warning">
-        На складе нет рулонов этой ткани.
+@*
+    Пока форма используется для построения нового интерфейса.
+    Массовый POST подключим следующим шагом.
+*@
+<form asp-action="Create"
+      method="post">
+
+    @Html.AntiForgeryToken()
+
+    <input type="hidden"
+           name="productId"
+           value="@product.Id" />
+
+    <div class="card mb-4">
+
+        <div class="card-body">
+
+            <label for="requestNumber"
+                   class="form-label fw-semibold">
+                Номер заявки
+            </label>
+
+            <input type="text"
+                   id="requestNumber"
+                   name="requestNumber"
+                   class="form-control"
+                   style="max-width: 400px;"
+                   maxlength="100"
+                   placeholder="Введите номер заявки"
+                   required />
+
+            <div class="form-text">
+                Номер заявки будет применён ко всем создаваемым резервам.
+            </div>
+
+        </div>
+
     </div>
-}
-else if (remainingNeed <= 0)
-{
-    <div class="alert alert-success">
-        Потребность в ткани уже полностью обеспечена резервами.
-    </div>
-}
-else
-{
-    <div class="table-responsive">
-        <table class="table table-striped table-hover align-middle">
 
-            <thead>
-                <tr>
-                    <th>Рулон</th>
-                    <th>Ячейка</th>
-                    <th>Физический остаток</th>
-                    <th>Зарезервировано</th>
-                    <th>Доступно</th>
-                    <th style="min-width: 420px;">
-                        Новый резерв
-                    </th>
-                </tr>
-            </thead>
 
-            <tbody>
+    @if (!product.ProductFabrics.Any())
+    {
+        <div class="alert alert-light border">
+            Для изделия не указана потребность в ткани.
+        </div>
+    }
+    else
+    {
+        @foreach (var productFabric in product.ProductFabrics
+            .OrderBy(x => x.Fabric.Name))
+        {
+            var alreadyReserved =
+                productFabric.RollReservations
+                    .Sum(x => x.ReservedLength);
 
-                @foreach (var roll in rolls)
-                {
-                    var reserved =
-                        roll.Reservations.Sum(x => x.ReservedLength);
+            var remainingNeed =
+                productFabric.RequiredLength - alreadyReserved;
 
-                    var available =
-                        roll.CurrentLength - reserved;
+            var fabricRolls =
+                rolls
+                    .Where(x => x.FabricId == productFabric.FabricId)
+                    .ToList();
 
-                    <tr>
+            <div class="card mb-4">
 
-                        <td>
-                            <strong>@roll.Number</strong>
-                        </td>
+                <div class="card-header bg-white py-3">
 
-                        <td>
-                            @(roll.Cell?.Code ?? "Не размещён")
-                        </td>
+                    <div class="d-flex justify-content-between align-items-center">
 
-                        <td>
-                            @roll.CurrentLength.ToString("0.00") м
-                        </td>
+                        <h4 class="mb-0">
+                            @productFabric.Fabric.Name
+                        </h4>
 
-                        <td>
-                            @reserved.ToString("0.00") м
-                        </td>
+                        @if (remainingNeed <= 0)
+                        {
+                            <span class="badge text-bg-success">
+                                Потребность обеспечена
+                            </span>
+                        }
 
-                        <td>
+                    </div>
+
+                </div>
+
+
+                <div class="card-body">
+
+                    <div class="row mb-4">
+
+                        <div class="col-md-4">
+
+                            <div class="text-muted">
+                                Требуется
+                            </div>
+
                             <strong>
-                                @available.ToString("0.00") м
+                                @productFabric.RequiredLength.ToString("0.00") м
                             </strong>
-                        </td>
 
-                        <td>
+                        </div>
 
-                            @if (available > 0 && remainingNeed > 0)
-                            {
-                                <form asp-action="Create"
-                                      method="post">
 
-                                    @Html.AntiForgeryToken()
+                        <div class="col-md-4">
 
-                                    <input type="hidden"
-                                           name="productFabricId"
-                                           value="@productFabric.Id" />
+                            <div class="text-muted">
+                                Уже зарезервировано
+                            </div>
 
-                                    <input type="hidden"
-                                           name="rollId"
-                                           value="@roll.Id" />
+                            <strong>
+                                @alreadyReserved.ToString("0.00") м
+                            </strong>
 
-                                    <div class="d-flex gap-2">
+                        </div>
 
-                                        <input type="text"
-                                               name="requestNumber"
-                                               class="form-control"
-                                               maxlength="100"
-                                               placeholder="№ заявки"
-                                               aria-label="Номер заявки"
-                                               required />
 
-                                        <input type="number"
-                                               name="reservedLength"
-                                               class="form-control"
-                                               style="max-width: 120px;"
-                                               step="0.01"
-                                               min="0.01"
-                                               max="@Math.Min(available, remainingNeed).ToString(System.Globalization.CultureInfo.InvariantCulture)"
-                                               value="@Math.Min(available, remainingNeed).ToString("0.00", System.Globalization.CultureInfo.InvariantCulture)"
-                                               required />
+                        <div class="col-md-4">
 
-                                        <button type="submit"
-                                                class="btn btn-primary text-nowrap">
-                                            Резерв
-                                        </button>
+                            <div class="text-muted">
+                                Осталось зарезервировать
+                            </div>
 
-                                    </div>
+                            <strong>
+                                @Math.Max(0, remainingNeed).ToString("0.00") м
+                            </strong>
 
-                                </form>
-                            }
-                            else
-                            {
-                                <span class="text-muted">
-                                    Недоступен
-                                </span>
-                            }
+                        </div>
 
-                        </td>
+                    </div>
 
-                    </tr>
-                }
 
-            </tbody>
-        </table>
-    </div>
-}
+                    @if (remainingNeed <= 0)
+                    {
+                        <div class="alert alert-success mb-0">
+                            Потребность в этой ткани уже полностью обеспечена.
+                        </div>
+                    }
+                    else if (!fabricRolls.Any())
+                    {
+                        <div class="alert alert-warning mb-0">
+                            <strong>Нет доступных рулонов.</strong>
+                            На складе нет рулонов этой ткани.
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="table-responsive">
+
+                            <table class="table table-hover align-middle mb-0">
+
+                                <thead class="table-light">
+
+                                    <tr>
+                                        <th>Рулон</th>
+                                        <th>Ячейка</th>
+                                        <th>Физический остаток</th>
+                                        <th>В резерве</th>
+                                        <th>Доступно</th>
+
+                                        <th style="width: 220px;">
+                                            Новый резерв
+                                        </th>
+                                    </tr>
+
+                                </thead>
+
+
+                                <tbody>
+
+                                    @foreach (var roll in fabricRolls)
+                                    {
+                                        var reservedOnRoll =
+                                            roll.Reservations
+                                                .Sum(x => x.ReservedLength);
+
+                                        var available =
+                                            roll.CurrentLength - reservedOnRoll;
+
+                                        <tr>
+
+                                            <td>
+                                                <a asp-controller="Rolls"
+                                                   asp-action="Details"
+                                                   asp-route-id="@roll.Id"
+                                                   class="text-decoration-none fw-semibold">
+
+                                                    @roll.Number
+
+                                                </a>
+                                            </td>
+
+
+                                            <td>
+                                                @(roll.Cell?.Code ?? "Не размещён")
+                                            </td>
+
+
+                                            <td>
+                                                @roll.CurrentLength.ToString("0.00") м
+                                            </td>
+
+
+                                            <td>
+                                                @reservedOnRoll.ToString("0.00") м
+                                            </td>
+
+
+                                            <td>
+
+                                                @if (available > 0)
+                                                {
+                                                    <strong>
+                                                        @available.ToString("0.00") м
+                                                    </strong>
+                                                }
+                                                else
+                                                {
+                                                    <span class="text-danger">
+                                                        0.00 м
+                                                    </span>
+                                                }
+
+                                            </td>
+
+
+                                            <td>
+
+                                                @if (available > 0)
+                                                {
+                                                    <input type="number"
+                                                           name="reservations[@roll.Id]"
+                                                           class="form-control"
+                                                           step="0.01"
+                                                           min="0"
+                                                           max="@Math.Min(available, remainingNeed).ToString(System.Globalization.CultureInfo.InvariantCulture)"
+                                                           placeholder="0,00" />
+                                                }
+                                                else
+                                                {
+                                                    <span class="text-muted">
+                                                        Недоступен
+                                                    </span>
+                                                }
+
+                                            </td>
+
+                                        </tr>
+                                    }
+
+                                </tbody>
+
+                            </table>
+
+                        </div>
+                    }
+
+                </div>
+
+            </div>
+        }
+    }
+
+
+    @if (product.ProductFabrics.Any(x =>
+        x.RequiredLength >
+        x.RollReservations.Sum(r => r.ReservedLength)))
+    {
+        <div class="d-flex justify-content-end mb-5">
+
+            <button type="submit"
+                    class="btn btn-primary btn-lg">
+                Зарезервировать выбранное
+            </button>
+
+        </div>
+    }
+
+</form>

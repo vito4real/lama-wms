@@ -16,25 +16,31 @@ public class RollReservationsController : Controller
     }
 
     [HttpGet]
-    public async Task<IActionResult> Create(Guid productFabricId)
+    public async Task<IActionResult> Create(Guid productId)
     {
-        var productFabric = await _context.ProductFabrics
-            .Include(x => x.Product)
-            .Include(x => x.Fabric)
-            .Include(x => x.RollReservations)
-            .FirstOrDefaultAsync(x => x.Id == productFabricId);
+        var product = await _context.Products
+            .Include(x => x.ProductFabrics)
+                .ThenInclude(x => x.Fabric)
+            .Include(x => x.ProductFabrics)
+                .ThenInclude(x => x.RollReservations)
+            .FirstOrDefaultAsync(x => x.Id == productId);
 
-        if (productFabric == null)
+        if (product == null)
             return NotFound();
+
+        var fabricIds = product.ProductFabrics
+            .Select(x => x.FabricId)
+            .Distinct()
+            .ToList();
 
         var rolls = await _context.Rolls
             .Include(x => x.Cell)
             .Include(x => x.Reservations)
-            .Where(x => x.FabricId == productFabric.FabricId)
+            .Where(x => fabricIds.Contains(x.FabricId))
             .OrderBy(x => x.Number)
             .ToListAsync();
 
-        ViewBag.ProductFabric = productFabric;
+        ViewBag.Product = product;
         ViewBag.Rolls = rolls;
 
         return View();
@@ -43,12 +49,12 @@ public class RollReservationsController : Controller
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Create(
-        Guid productFabricId,
-        Guid rollId,
-        decimal reservedLength,
-        string requestNumber)
+    Guid productId,
+    string requestNumber,
+    Dictionary<Guid, decimal> reservations)
     {
-        requestNumber = requestNumber?.Trim() ?? string.Empty;
+        requestNumber =
+            requestNumber?.Trim() ?? string.Empty;
 
         if (string.IsNullOrWhiteSpace(requestNumber))
         {
@@ -57,7 +63,7 @@ public class RollReservationsController : Controller
 
             return RedirectToAction(
                 nameof(Create),
-                new { productFabricId });
+                new { productId });
         }
 
         if (requestNumber.Length > 100)
@@ -67,92 +73,175 @@ public class RollReservationsController : Controller
 
             return RedirectToAction(
                 nameof(Create),
-                new { productFabricId });
+                new { productId });
         }
 
-        if (reservedLength <= 0)
+        // Оставляем только реально введённые значения.
+        var selectedReservations = reservations
+            .Where(x => x.Value > 0)
+            .ToDictionary(
+                x => x.Key,
+                x => x.Value);
+
+        if (!selectedReservations.Any())
         {
-            TempData["Error"] = "Количество для резервирования должно быть больше 0.";
-            return RedirectToAction(nameof(Create), new { productFabricId });
+            TempData["Error"] =
+                "Необходимо указать хотя бы один резерв.";
+
+            return RedirectToAction(
+                nameof(Create),
+                new { productId });
         }
 
-        var productFabric = await _context.ProductFabrics
-            .Include(x => x.Product)
-            .FirstOrDefaultAsync(x => x.Id == productFabricId);
+        // Загружаем изделие и его потребности.
+        var product = await _context.Products
+            .Include(x => x.ProductFabrics)
+                .ThenInclude(x => x.Fabric)
+            .Include(x => x.ProductFabrics)
+                .ThenInclude(x => x.RollReservations)
+            .FirstOrDefaultAsync(x => x.Id == productId);
 
-        if (productFabric == null)
+        if (product == null)
             return NotFound();
 
-        var roll = await _context.Rolls
-            .FirstOrDefaultAsync(x => x.Id == rollId);
+        // Загружаем все выбранные рулоны.
+        var rollIds =
+            selectedReservations.Keys.ToList();
 
-        if (roll == null)
-            return NotFound();
+        var rolls = await _context.Rolls
+            .Include(x => x.Reservations)
+            .Where(x => rollIds.Contains(x.Id))
+            .ToListAsync();
 
-        // Нельзя резервировать рулон другой ткани.
-        if (roll.FabricId != productFabric.FabricId)
+        if (rolls.Count != rollIds.Count)
         {
             TempData["Error"] =
-                "Выбранный рулон относится к другой ткани.";
+                "Один или несколько выбранных рулонов не найдены.";
 
             return RedirectToAction(
                 nameof(Create),
-                new { productFabricId });
+                new { productId });
         }
 
-        // Сколько всего уже зарезервировано из этого рулона.
-        var reservedOnRoll = await _context.RollReservations
-            .Where(x => x.RollId == rollId)
-            .SumAsync(x => (decimal?)x.ReservedLength) ?? 0m;
+        var newReservations =
+            new List<RollReservation>();
 
-        var availableLength =
-            roll.CurrentLength - reservedOnRoll;
+        /*
+         * Один рулон принадлежит одной ткани.
+         *
+         * Поэтому по FabricId рулона мы определяем,
+         * какую потребность ProductFabric он закрывает.
+         */
+        foreach (var roll in rolls)
+        {
+            var reservedLength =
+                selectedReservations[roll.Id];
 
-        if (reservedLength > availableLength)
+            if (reservedLength <= 0)
+                continue;
+
+            var productFabric =
+                product.ProductFabrics
+                    .FirstOrDefault(x =>
+                        x.FabricId == roll.FabricId);
+
+            if (productFabric == null)
+            {
+                TempData["Error"] =
+                    $"Рулон {roll.Number} содержит ткань, " +
+                    "которая не используется в этом изделии.";
+
+                return RedirectToAction(
+                    nameof(Create),
+                    new { productId });
+            }
+
+            // Сколько уже занято на этом рулоне.
+            var reservedOnRoll =
+                roll.Reservations
+                    .Sum(x => x.ReservedLength);
+
+            var availableLength =
+                roll.CurrentLength - reservedOnRoll;
+
+            if (reservedLength > availableLength)
+            {
+                TempData["Error"] =
+                    $"В рулоне {roll.Number} доступно только " +
+                    $"{availableLength:0.00} м.";
+
+                return RedirectToAction(
+                    nameof(Create),
+                    new { productId });
+            }
+
+            newReservations.Add(
+                new RollReservation
+                {
+                    Id = Guid.NewGuid(),
+                    RollId = roll.Id,
+                    ProductFabricId = productFabric.Id,
+                    RequestNumber = requestNumber,
+                    ReservedLength = reservedLength,
+                    CreatedAt = DateTime.UtcNow
+                });
+        }
+
+        /*
+         * Теперь проверяем суммарное количество.
+         *
+         * Важно делать это после построения всего списка,
+         * потому что одна ткань может резервироваться
+         * сразу с нескольких рулонов.
+         */
+        foreach (var productFabric in product.ProductFabrics)
+        {
+            var alreadyReserved =
+                productFabric.RollReservations
+                    .Sum(x => x.ReservedLength);
+
+            var remainingNeed =
+                productFabric.RequiredLength -
+                alreadyReserved;
+
+            var newReserved =
+                newReservations
+                    .Where(x =>
+                        x.ProductFabricId == productFabric.Id)
+                    .Sum(x => x.ReservedLength);
+
+            if (newReserved > remainingNeed)
+            {
+                TempData["Error"] =
+                    $"Для ткани \"{productFabric.Fabric.Name}\" " +
+                    $"осталось зарезервировать только " +
+                    $"{remainingNeed:0.00} м.";
+
+                return RedirectToAction(
+                    nameof(Create),
+                    new { productId });
+            }
+        }
+
+        if (!newReservations.Any())
         {
             TempData["Error"] =
-                $"В рулоне доступно только {availableLength:0.00} м.";
+                "Необходимо указать хотя бы один резерв.";
 
             return RedirectToAction(
                 nameof(Create),
-                new { productFabricId });
+                new { productId });
         }
 
-        // Сколько уже зарезервировано для этой потребности изделия.
-        var alreadyReserved = await _context.RollReservations
-            .Where(x => x.ProductFabricId == productFabricId)
-            .SumAsync(x => (decimal?)x.ReservedLength) ?? 0m;
+        _context.RollReservations.AddRange(
+            newReservations);
 
-        var remainingNeed =
-            productFabric.RequiredLength - alreadyReserved;
-
-        if (reservedLength > remainingNeed)
-        {
-            TempData["Error"] =
-                $"Для изделия осталось зарезервировать только {remainingNeed:0.00} м.";
-
-            return RedirectToAction(
-                nameof(Create),
-                new { productFabricId });
-        }
-
-        var reservation = new RollReservation
-        {
-            Id = Guid.NewGuid(),
-            RollId = rollId,
-            ProductFabricId = productFabricId,
-            RequestNumber = requestNumber,
-            ReservedLength = reservedLength,
-            CreatedAt = DateTime.UtcNow
-        };
-
-        _context.RollReservations.Add(reservation);
         await _context.SaveChangesAsync();
 
         return RedirectToAction(
             "Details",
             "Products",
-            new { id = productFabric.ProductId });
+            new { id = productId });
     }
 
     [HttpGet]
