@@ -24,37 +24,32 @@
 
 </div>
 
-
-<form asp-action="Index"
-      method="get"
-      class="mb-4">
-
-    <div class="d-flex gap-2"
-         style="max-width: 650px;">
+<form method="get" class="mb-3">
+    <div class="d-flex flex-column flex-sm-row gap-2">
 
         <input type="text"
                name="search"
-               value="@search"
-               class="form-control"
-               placeholder="№ заявки, изделие, ткань, рулон или ячейка" />
+               value="@ViewBag.Search"
+               class="form-control flex-grow-1"
+               placeholder="Поиск по № заявки, изделию, ткани, рулону или ячейке" />
 
-        <button type="submit"
-                class="btn btn-primary">
-            Найти
-        </button>
+        <div class="d-flex gap-2">
+            <button type="submit"
+                    class="btn btn-primary">
+                Найти
+            </button>
 
-        @if (!string.IsNullOrWhiteSpace(search))
-        {
-            <a asp-action="Index"
-               class="btn btn-outline-secondary">
-                Сбросить
-            </a>
-        }
+            @if (!string.IsNullOrWhiteSpace(ViewBag.Search))
+            {
+                <a asp-action="Index"
+                   class="btn btn-outline-secondary">
+                    Сбросить
+                </a>
+            }
+        </div>
 
     </div>
-
 </form>
-
 
 @if (!Model.Any())
 {

@@ -16,14 +16,31 @@ public class RollsController : Controller
         _context = context;
     }
 
-    public async Task<IActionResult> Index()
+    [HttpGet]
+    public async Task<IActionResult> Index(string? search)
     {
-        var rolls = await _context.Rolls
+        var query = _context.Rolls
             .Include(x => x.Fabric)
             .Include(x => x.Cell)
             .Include(x => x.Reservations)
+            .AsQueryable();
+
+        if (!string.IsNullOrWhiteSpace(search))
+        {
+            search = search.Trim();
+
+            query = query.Where(x =>
+                x.Number.Contains(search) ||
+                x.Fabric.Name.Contains(search) ||
+                (x.Cell != null &&
+                 x.Cell.Code.Contains(search)));
+        }
+
+        var rolls = await query
             .OrderBy(x => x.Number)
             .ToListAsync();
+
+        ViewBag.Search = search;
 
         return View(rolls);
     }

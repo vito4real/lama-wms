@@ -15,13 +15,29 @@ public class ProductsController : Controller
         _context = context;
     }
 
-    public async Task<IActionResult> Index()
+    [HttpGet]
+    public async Task<IActionResult> Index(string? search)
     {
-        var products = await _context.Products
+        var query = _context.Products
             .Include(x => x.ProductFabrics)
                 .ThenInclude(x => x.Fabric)
+            .AsQueryable();
+
+        if (!string.IsNullOrWhiteSpace(search))
+        {
+            search = search.Trim();
+
+            query = query.Where(x =>
+                x.Name.Contains(search) ||
+                x.ProductFabrics.Any(pf =>
+                    pf.Fabric.Name.Contains(search)));
+        }
+
+        var products = await query
             .OrderBy(x => x.Name)
             .ToListAsync();
+
+        ViewBag.Search = search;
 
         return View(products);
     }

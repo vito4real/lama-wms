@@ -14,12 +14,26 @@ public class FabricsController : Controller
         _context = context;
     }
 
-    public async Task<IActionResult> Index()
+    [HttpGet]
+    public async Task<IActionResult> Index(string? search)
     {
-        var fabrics = await _context.Fabrics
-        .Include(x => x.Rolls)
-        .OrderBy(x => x.Name)
-        .ToListAsync();
+        var query = _context.Fabrics
+            .Include(x => x.Rolls)
+            .AsQueryable();
+
+        if (!string.IsNullOrWhiteSpace(search))
+        {
+            search = search.Trim();
+
+            query = query.Where(x =>
+                x.Name.Contains(search));
+        }
+
+        var fabrics = await query
+            .OrderBy(x => x.Name)
+            .ToListAsync();
+
+        ViewBag.Search = search;
 
         return View(fabrics);
     }

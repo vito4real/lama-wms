@@ -14,12 +14,26 @@ public class CellsController : Controller
         _context = context;
     }
 
-    public async Task<IActionResult> Index()
+    [HttpGet]
+    public async Task<IActionResult> Index(string? search)
     {
-        var cells = await _context.Cells
+        var query = _context.Cells
             .Include(x => x.Rolls)
+            .AsQueryable();
+
+        if (!string.IsNullOrWhiteSpace(search))
+        {
+            search = search.Trim();
+
+            query = query.Where(x =>
+                x.Code.Contains(search));
+        }
+
+        var cells = await query
             .OrderBy(x => x.Code)
             .ToListAsync();
+
+        ViewBag.Search = search;
 
         return View(cells);
     }

@@ -12,6 +12,33 @@
     </a>
 </div>
 
+<form method="get" class="mb-3">
+    <div class="d-flex flex-column flex-sm-row gap-2">
+
+        <input type="text"
+               name="search"
+               value="@ViewBag.Search"
+               class="form-control flex-grow-1"
+               placeholder="Поиск по номеру, ткани или ячейке..." />
+
+        <div class="d-flex gap-2">
+            <button type="submit"
+                    class="btn btn-primary">
+                Найти
+            </button>
+
+            @if (!string.IsNullOrWhiteSpace(ViewBag.Search))
+            {
+                <a asp-action="Index"
+                   class="btn btn-outline-secondary">
+                    Сбросить
+                </a>
+            }
+        </div>
+
+    </div>
+</form>
+
 <table class="table table-striped table-hover align-middle">
     <thead>
         <tr>
