@@ -54,3 +54,74 @@ body {
 .form-floating > .form-control-plaintext:focus::placeholder, .form-floating > .form-control:focus::placeholder {
   text-align: start;
 }
+
+/* LamaWMS Easter Egg */
+
+.lama-easter-egg {
+    position: fixed;
+    right: 25px;
+    bottom: -420px;
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    z-index: 9999;
+    pointer-events: none;
+    transition: bottom 0.7s cubic-bezier( 0.34, 1.56, 0.64, 1 );
+}
+
+    .lama-easter-egg.show {
+        bottom: 15px;
+    }
+
+.lama-image {
+    width: 220px;
+    height: auto;
+    filter: drop-shadow( 0 8px 12px rgba(0, 0, 0, 0.18) );
+}
+
+.lama-message {
+    margin-top: 45px;
+    padding: 10px 14px;
+    background: white;
+    border: 1px solid #dee2e6;
+    border-radius: 14px;
+    font-size: 14px;
+    font-weight: 500;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+    opacity: 0;
+    transform: translateY(10px);
+    transition: opacity 0.3s ease 0.5s, transform 0.3s ease 0.5s;
+    white-space: nowrap;
+}
+
+.lama-easter-egg.show .lama-message {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.lama-easter-egg.show .lama-image {
+    animation: lamaBounce 0.7s ease 0.6s;
+}
+
+@keyframes lamaBounce {
+
+    0% {
+        transform: translateY(0);
+    }
+
+    35% {
+        transform: translateY(-20px);
+    }
+
+    60% {
+        transform: translateY(0);
+    }
+
+    80% {
+        transform: translateY(-8px);
+    }
+
+    100% {
+        transform: translateY(0);
+    }
+}

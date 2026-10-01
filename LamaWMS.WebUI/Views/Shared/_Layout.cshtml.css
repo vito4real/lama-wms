@@ -46,3 +46,19 @@ button.accept-policy {
   white-space: nowrap;
   line-height: 60px;
 }
+
+.footer {
+    position: fixed;
+    left: 0;
+    bottom: 0;
+    width: 100%;
+    background-color: #ffffff;
+    border-top: 1px solid #e5e5e5;
+    white-space: nowrap;
+    line-height: 60px;
+    z-index: 1000;
+}
+
+body {
+    padding-bottom: 75px;
+}

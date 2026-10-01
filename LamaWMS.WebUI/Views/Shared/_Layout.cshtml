@@ -10,10 +10,10 @@
     <link rel="stylesheet" href="~/LamaWMS.WebUI.styles.css" asp-append-version="true" />
 </head>
 <body>
-    <header>
+    <header class="fixed-top">
         <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
             <div class="container-fluid">
-                <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">
+                <a class="navbar-brand" asp-area="" asp-controller="RollReservations" asp-action="Index">
                     <img src="~/img/LogoLama.png" alt="Главная" style="height: 30px;" />
                 </a>
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
@@ -46,19 +46,79 @@
         </nav>
     </header>
     <div class="container-fluid">
-        <main role="main" class="pb-3">
+        <main role="main" class="pb-3" style="padding-top: 75px;">
             @RenderBody()
         </main>
     </div>
 
     <footer class="border-top footer text-muted">
         <div class="container-fluid">
-            &copy; 2026 - СООО "Лама-мебель" - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
+            <span id="lamaTrigger">&copy; 2026 - LamaWMS</span>
         </div>
     </footer>
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
     @await RenderSectionAsync("Scripts", required: false)
+
+    <div id="lamaEasterEgg" class="lama-easter-egg">
+        <div class="lama-message">
+            Мее-е. Склад под контролем.
+        </div>
+
+        <img src="~/img/cute_lama.png"
+             alt=""
+             class="lama-image" />
+    </div>
+
+    <script>
+            document.addEventListener("DOMContentLoaded", function () {
+
+                const trigger =
+                    document.getElementById("lamaTrigger");
+
+                const lama =
+                    document.getElementById("lamaEasterEgg");
+
+                if (!trigger || !lama)
+                    return;
+
+                let clickCount = 0;
+                let resetTimer = null;
+                let hideTimer = null;
+
+                trigger.addEventListener("click", function () {
+
+                    clickCount++;
+
+                    clearTimeout(resetTimer);
+
+                    // Если пользователь перестал кликать,
+                    // последовательность сбрасывается.
+                    resetTimer = setTimeout(function () {
+                        clickCount = 0;
+                    }, 2000);
+
+                    if (clickCount < 5)
+                        return;
+
+                    clickCount = 0;
+
+                    clearTimeout(resetTimer);
+                    clearTimeout(hideTimer);
+
+                    lama.classList.remove("show");
+
+                    // Позволяет повторно запустить анимацию.
+                    void lama.offsetWidth;
+
+                    lama.classList.add("show");
+
+                    hideTimer = setTimeout(function () {
+                        lama.classList.remove("show");
+                    }, 5000);
+                });
+            });
+    </script>
 </body>
 </html>
