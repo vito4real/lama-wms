@@ -1,0 +1,251 @@
+﻿@using LamaWMS.Domain.Entities
+@using LamaWMS.Domain.Enums
+@model IEnumerable<RollTransaction>
+
+@{
+    ViewData["Title"] = "История операций";
+
+    var search = ViewBag.Search as string;
+
+    string GetTransactionName(RollTransactionType type)
+    {
+        return type switch
+        {
+            RollTransactionType.Receipt => "Приход",
+            RollTransactionType.Consumption => "В производство",
+            RollTransactionType.Return => "Возврат",
+            RollTransactionType.WriteOff => "Списание",
+            RollTransactionType.Adjustment => "Корректировка",
+            _ => type.ToString()
+        };
+    }
+
+    string GetTransactionLength(
+        RollTransactionType type,
+        decimal length)
+    {
+        return type switch
+        {
+            RollTransactionType.Receipt =>
+                $"+{length:0.00} м",
+
+            RollTransactionType.Return =>
+                $"+{length:0.00} м",
+
+            RollTransactionType.Consumption =>
+                $"-{length:0.00} м",
+
+            RollTransactionType.WriteOff =>
+                $"-{length:0.00} м",
+
+            RollTransactionType.Adjustment =>
+                $"{(length > 0 ? "+" : "")}{length:0.00} м",
+
+            _ =>
+                $"{length:0.00} м"
+        };
+    }
+}
+
+
+<div class="mb-4">
+
+    <h1 class="mb-1">
+        История операций
+    </h1>
+
+    <div class="text-muted">
+        Движение ткани на складе
+    </div>
+
+</div>
+
+
+<form asp-action="Index"
+      method="get"
+      class="mb-4">
+
+    <div class="d-flex gap-2"
+         style="max-width: 700px;">
+
+        <input type="text"
+               name="search"
+               value="@search"
+               class="form-control"
+               placeholder="Рулон, ткань, изделие, № заявки или комментарий" />
+
+        <button type="submit"
+                class="btn btn-primary">
+            Найти
+        </button>
+
+        @if (!string.IsNullOrWhiteSpace(search))
+        {
+            <a asp-action="Index"
+               class="btn btn-outline-secondary">
+                Сбросить
+            </a>
+        }
+
+    </div>
+
+</form>
+
+
+@if (!Model.Any())
+{
+    <div class="alert alert-light border">
+
+        @if (!string.IsNullOrWhiteSpace(search))
+        {
+            <span>
+                Операции по заданным условиям не найдены.
+            </span>
+        }
+        else
+        {
+            <span>
+                История операций пока пуста.
+            </span>
+        }
+
+    </div>
+}
+else
+{
+    <div class="card">
+
+        <div class="table-responsive">
+
+            <table class="table table-hover align-middle mb-0">
+
+                <thead class="table-light">
+
+                    <tr>
+                        <th>Дата</th>
+                        <th>Операция</th>
+                        <th>Рулон</th>
+                        <th>Ткань</th>
+                        <th>Количество</th>
+                        <th>№ заявки</th>
+                        <th>Изделие</th>
+                        <th>Комментарий</th>
+                    </tr>
+
+                </thead>
+
+                <tbody>
+
+                    @foreach (var transaction in Model)
+                    {
+                        <tr>
+
+                            <td class="text-muted text-nowrap">
+                                @(transaction.CreatedAt
+                                    .ToLocalTime()
+                                    .ToString("dd.MM.yyyy HH:mm"))
+                            </td>
+
+
+                            <td>
+                                @GetTransactionName(transaction.Type)
+                            </td>
+
+
+                            <td>
+
+                                <a asp-controller="Rolls"
+                                   asp-action="Details"
+                                   asp-route-id="@transaction.RollId"
+                                   class="text-decoration-none fw-semibold">
+
+                                    @transaction.Roll.Number
+
+                                </a>
+
+                            </td>
+
+
+                            <td>
+                                @transaction.Roll.Fabric.Name
+                            </td>
+
+
+                            <td class="text-nowrap">
+                                <strong>
+                                    @GetTransactionLength(
+                                        transaction.Type,
+                                        transaction.Length)
+                                </strong>
+                            </td>
+
+
+                            <td>
+
+                                @if (!string.IsNullOrWhiteSpace(
+                                    transaction.RequestNumber))
+                                {
+                                    <strong>
+                                        @transaction.RequestNumber
+                                    </strong>
+                                }
+                                else
+                                {
+                                    <span class="text-muted">
+                                        —
+                                    </span>
+                                }
+
+                            </td>
+
+
+                            <td>
+
+                                @if (transaction.Product != null)
+                                {
+                                    <a asp-controller="Products"
+                                       asp-action="Details"
+                                       asp-route-id="@transaction.ProductId"
+                                       class="text-decoration-none">
+
+                                        @transaction.Product.Name
+
+                                    </a>
+                                }
+                                else
+                                {
+                                    <span class="text-muted">
+                                        —
+                                    </span>
+                                }
+
+                            </td>
+
+
+                            <td>
+
+                                @if (!string.IsNullOrWhiteSpace(
+                                    transaction.Comment))
+                                {
+                                    @transaction.Comment
+                                }
+                                else
+                                {
+                                    <span class="text-muted">
+                                        —
+                                    </span>
+                                }
+
+                            </td>
+
+                        </tr>
+                    }
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </div>
+}

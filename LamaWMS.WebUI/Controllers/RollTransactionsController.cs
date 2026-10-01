@@ -15,6 +15,38 @@ public class RollTransactionsController : Controller
         _context = context;
     }
 
+    [HttpGet]
+    public async Task<IActionResult> Index(string? search)
+    {
+        var query = _context.RollTransactions
+            .Include(x => x.Roll)
+                .ThenInclude(x => x.Fabric)
+            .Include(x => x.Roll)
+                .ThenInclude(x => x.Cell)
+            .Include(x => x.Product)
+            .AsQueryable();
+
+        if (!string.IsNullOrWhiteSpace(search))
+        {
+            search = search.Trim();
+
+            query = query.Where(x =>
+                x.Roll.Number.Contains(search) ||
+                x.Roll.Fabric.Name.Contains(search) ||
+                (x.Product != null && x.Product.Name.Contains(search)) ||
+                (x.RequestNumber != null && x.RequestNumber.Contains(search)) ||
+                (x.Comment != null && x.Comment.Contains(search)));
+        }
+
+        var transactions = await query
+            .OrderByDescending(x => x.CreatedAt)
+            .ToListAsync();
+
+        ViewBag.Search = search;
+
+        return View(transactions);
+    }
+
     // ------------------------------------------------------------
     // ПРИХОД
     // Дополнительное поступление ткани на существующий рулон.
