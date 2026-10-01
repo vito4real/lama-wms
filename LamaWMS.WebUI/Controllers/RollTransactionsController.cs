@@ -3,6 +3,7 @@ using LamaWMS.Domain.Enums;
 using LamaWMS.Infrastructure;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using ClosedXML.Excel;
 
 namespace LamaWMS.WebUI.Controllers;
 
@@ -337,5 +338,186 @@ public class RollTransactionsController : Controller
             "Details",
             "Rolls",
             new { id = rollId });
+    }
+
+    //------------------------------------------------------------
+    // ЭКСПОРТ В EXCEL
+    //------------------------------------------------------------
+    [HttpGet]
+    public async Task<IActionResult> ExportExcel(string? search)
+    {
+        var query = _context.RollTransactions
+            .Include(x => x.Roll)
+                .ThenInclude(x => x.Fabric)
+            .Include(x => x.Roll)
+                .ThenInclude(x => x.Cell)
+            .Include(x => x.Product)
+            .AsQueryable();
+
+        if (!string.IsNullOrWhiteSpace(search))
+        {
+            search = search.Trim();
+
+            query = query.Where(x =>
+                x.Roll.Number.Contains(search) ||
+                x.Roll.Fabric.Name.Contains(search) ||
+                (x.Product != null &&
+                 x.Product.Name.Contains(search)) ||
+                (x.RequestNumber != null &&
+                 x.RequestNumber.Contains(search)) ||
+                (x.Comment != null &&
+                 x.Comment.Contains(search)));
+        }
+
+        var transactions = await query
+            .OrderByDescending(x => x.CreatedAt)
+            .ToListAsync();
+
+        using var workbook = new XLWorkbook();
+
+        var worksheet =
+            workbook.Worksheets.Add("История операций");
+
+        // Заголовки
+        worksheet.Cell(1, 1).Value = "Дата";
+        worksheet.Cell(1, 2).Value = "Операция";
+        worksheet.Cell(1, 3).Value = "Рулон";
+        worksheet.Cell(1, 4).Value = "Ткань";
+        worksheet.Cell(1, 5).Value = "Количество, м";
+        worksheet.Cell(1, 6).Value = "№ заявки";
+        worksheet.Cell(1, 7).Value = "Изделие";
+        worksheet.Cell(1, 8).Value = "Комментарий";
+
+        var row = 2;
+
+        foreach (var transaction in transactions)
+        {
+            worksheet.Cell(row, 1).Value =
+                transaction.CreatedAt.ToLocalTime();
+
+            worksheet.Cell(row, 2).Value =
+                GetTransactionName(transaction.Type);
+
+            worksheet.Cell(row, 3).Value =
+                transaction.Roll.Number;
+
+            worksheet.Cell(row, 4).Value =
+                transaction.Roll.Fabric.Name;
+
+            worksheet.Cell(row, 5).Value =
+                GetSignedLength(
+                    transaction.Type,
+                    transaction.Length);
+
+            worksheet.Cell(row, 6).Value =
+                transaction.RequestNumber ?? string.Empty;
+
+            worksheet.Cell(row, 7).Value =
+                transaction.Product?.Name ?? string.Empty;
+
+            worksheet.Cell(row, 8).Value =
+                transaction.Comment ?? string.Empty;
+
+            row++;
+        }
+
+        // Заголовок таблицы
+        var header =
+            worksheet.Range(1, 1, 1, 8);
+
+        header.Style.Font.Bold = true;
+        header.Style.Fill.BackgroundColor =
+            XLColor.LightGray;
+
+        // Формат даты
+        worksheet.Column(1)
+            .Style.DateFormat.Format = "dd.MM.yyyy HH:mm";
+
+        // Количество остаётся настоящим числом
+        worksheet.Column(5)
+            .Style.NumberFormat.Format = "+0.00;-0.00;0.00";
+
+        // Автоматическая ширина колонок
+        worksheet.Columns().AdjustToContents();
+
+        // Чтобы комментарий не растягивал Excel на полэкрана
+        if (worksheet.Column(8).Width > 50)
+            worksheet.Column(8).Width = 50;
+
+        // Фиксируем заголовок
+        worksheet.SheetView.FreezeRows(1);
+
+        // Фильтры Excel
+        if (row > 2)
+        {
+            worksheet.Range(1, 1, row - 1, 8)
+                .SetAutoFilter();
+        }
+
+        using var stream = new MemoryStream();
+
+        workbook.SaveAs(stream);
+
+        var fileName =
+            $"transactions_{DateTime.Now:yyyy-MM-dd_HH-mm}.xlsx";
+
+        return File(
+            stream.ToArray(),
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            fileName);
+    }
+
+    //---------------------------------------------------------------------------------
+    // ВСПОМОГАТЕЛЬНЫЕ МЕТОДЫ GetTransactionName и GetSignedLength для экспорта в Excel
+    //---------------------------------------------------------------------------------
+    private static string GetTransactionName(
+    RollTransactionType type)
+    {
+        return type switch
+        {
+            RollTransactionType.Receipt =>
+                "Приход",
+
+            RollTransactionType.Consumption =>
+                "В производство",
+
+            RollTransactionType.Return =>
+                "Возврат",
+
+            RollTransactionType.WriteOff =>
+                "Списание",
+
+            RollTransactionType.Adjustment =>
+                "Корректировка",
+
+            _ => type.ToString()
+        };
+    }
+
+    private static decimal GetSignedLength(
+        RollTransactionType type,
+        decimal length)
+    {
+        return type switch
+        {
+            RollTransactionType.Receipt =>
+                Math.Abs(length),
+
+            RollTransactionType.Return =>
+                Math.Abs(length),
+
+            RollTransactionType.Consumption =>
+                -Math.Abs(length),
+
+            RollTransactionType.WriteOff =>
+                -Math.Abs(length),
+
+            // У Adjustment Length уже является разницей:
+            // может быть как положительным, так и отрицательным.
+            RollTransactionType.Adjustment =>
+                length,
+
+            _ => length
+        };
     }
 }

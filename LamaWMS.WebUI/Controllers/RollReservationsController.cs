@@ -3,6 +3,7 @@ using LamaWMS.Infrastructure;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using LamaWMS.Domain.Enums;
+using ClosedXML.Excel;
 
 namespace LamaWMS.WebUI.Controllers;
 
@@ -397,5 +398,119 @@ public class RollReservationsController : Controller
         await _context.SaveChangesAsync();
 
         return RedirectToAction(nameof(Index));
+    }
+
+    // Экспорт в Excel
+    [HttpGet]
+    public async Task<IActionResult> ExportExcel(string? search)
+    {
+        var query = _context.RollReservations
+            .Include(x => x.Roll)
+                .ThenInclude(x => x.Cell)
+            .Include(x => x.ProductFabric)
+                .ThenInclude(x => x.Product)
+            .Include(x => x.ProductFabric)
+                .ThenInclude(x => x.Fabric)
+            .AsQueryable();
+
+        if (!string.IsNullOrWhiteSpace(search))
+        {
+            search = search.Trim();
+
+            query = query.Where(x =>
+                x.RequestNumber.Contains(search) ||
+                x.ProductFabric.Product.Name.Contains(search) ||
+                x.ProductFabric.Fabric.Name.Contains(search) ||
+                x.Roll.Number.Contains(search) ||
+                (x.Roll.Cell != null &&
+                 x.Roll.Cell.Code.Contains(search)));
+        }
+
+        var reservations = await query
+            .OrderByDescending(x => x.CreatedAt)
+            .ToListAsync();
+
+        using var workbook = new XLWorkbook();
+
+        var worksheet =
+            workbook.Worksheets.Add("Резервы");
+
+        // Заголовки
+        worksheet.Cell(1, 1).Value = "№ заявки";
+        worksheet.Cell(1, 2).Value = "Изделие";
+        worksheet.Cell(1, 3).Value = "Ткань";
+        worksheet.Cell(1, 4).Value = "Рулон";
+        worksheet.Cell(1, 5).Value = "Ячейка";
+        worksheet.Cell(1, 6).Value = "Зарезервировано, м";
+        worksheet.Cell(1, 7).Value = "Дата";
+
+        var row = 2;
+
+        foreach (var reservation in reservations)
+        {
+            worksheet.Cell(row, 1).Value =
+                reservation.RequestNumber;
+
+            worksheet.Cell(row, 2).Value =
+                reservation.ProductFabric.Product.Name;
+
+            worksheet.Cell(row, 3).Value =
+                reservation.ProductFabric.Fabric.Name;
+
+            worksheet.Cell(row, 4).Value =
+                reservation.Roll.Number;
+
+            worksheet.Cell(row, 5).Value =
+                reservation.Roll.Cell?.Code ?? "Не размещён";
+
+            worksheet.Cell(row, 6).Value =
+                reservation.ReservedLength;
+
+            worksheet.Cell(row, 7).Value =
+                reservation.CreatedAt.ToLocalTime();
+
+            row++;
+        }
+
+        // Оформление заголовка
+        var header =
+            worksheet.Range(1, 1, 1, 7);
+
+        header.Style.Font.Bold = true;
+        header.Style.Fill.BackgroundColor =
+            XLColor.LightGray;
+
+        // Числовой формат
+        worksheet.Column(6)
+            .Style.NumberFormat.Format = "0.00";
+
+        // Дата
+        worksheet.Column(7)
+            .Style.DateFormat.Format = "dd.MM.yyyy HH:mm";
+
+        // Подбираем ширину колонок
+        worksheet.Columns().AdjustToContents();
+
+        // Фиксируем заголовок
+        worksheet.SheetView.FreezeRows(1);
+
+        // Автофильтр
+        if (row > 2)
+        {
+            worksheet.Range(1, 1, row - 1, 7)
+                .SetAutoFilter();
+        }
+
+        using var stream = new MemoryStream();
+
+        workbook.SaveAs(stream);
+
+        var fileName =
+            $"reservations_{DateTime.Now:yyyy-MM-dd_HH-mm}.xlsx";
+
+        return File(
+            stream.ToArray(),
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            fileName);
     }
 }

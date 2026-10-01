@@ -48,15 +48,23 @@
 }
 
 
-<div class="mb-4">
+<div class="d-flex justify-content-between align-items-start mb-4">
 
-    <h1 class="mb-1">
-        История операций
-    </h1>
+    <div>
+        <h1 class="mb-1">
+            История операций
+        </h1>
 
-    <div class="text-muted">
-        Движение ткани на складе
+        <div class="text-muted">
+            Движение ткани на складе
+        </div>
     </div>
+
+    <a asp-action="ExportExcel"
+       asp-route-search="@ViewBag.Search"
+       class="btn btn-success">
+        Экспорт в Excel
+    </a>
 
 </div>
 
