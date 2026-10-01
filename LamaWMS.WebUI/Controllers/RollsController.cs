@@ -21,6 +21,7 @@ public class RollsController : Controller
         var rolls = await _context.Rolls
             .Include(x => x.Fabric)
             .Include(x => x.Cell)
+            .Include(x => x.Reservations)
             .OrderBy(x => x.Number)
             .ToListAsync();
 

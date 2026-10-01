@@ -19,7 +19,8 @@
             <th>Ткань</th>
             <th>Ячейка</th>
             <th>Начальная длина</th>
-            <th>Остаток</th>
+            <th>Физический остаток</th>
+            <th>Доступно</th>
             <th></th>
         </tr>
     </thead>
@@ -48,6 +49,18 @@
                     <strong>
                         @item.CurrentLength.ToString("0.00") м
                     </strong>
+                </td>
+
+                @{
+                    var reservedLength =
+                        item.Reservations.Sum(x => x.ReservedLength);
+
+                    var availableLength =
+                        item.CurrentLength - reservedLength;
+                }
+
+                <td>
+                    <strong>@availableLength.ToString("0.00") м</strong>
                 </td>
 
                 <td class="text-end">

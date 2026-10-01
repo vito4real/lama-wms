@@ -17,6 +17,7 @@
         <tr>
             <th>Код</th>
             <th>Рулонов</th>
+            <th>Общий метраж</th>
             <th></th>
         </tr>
     </thead>
@@ -30,6 +31,12 @@
 
                 <td>
                     @cell.Rolls.Count
+                </td>
+
+                <td>
+                    <strong>
+                        @cell.Rolls.Sum(x => x.CurrentLength).ToString("0.00") м
+                    </strong>
                 </td>
 
                 <td class="text-end">

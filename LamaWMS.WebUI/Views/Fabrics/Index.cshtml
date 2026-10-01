@@ -17,6 +17,7 @@
         <tr>
             <th>Название</th>
             <th>Рулонов</th>
+            <th>Общий метраж</th>
             <th></th>
         </tr>
     </thead>
@@ -30,7 +31,31 @@
                 </td>
 
                 <td>
-                    @fabric.Rolls.Count
+                    @if (fabric.Rolls.Count > 0)
+                    {
+                        <strong>
+                            @fabric.Rolls.Count
+                        </strong>
+                    }
+                    else
+                    {
+                        <span class="text-muted">0</span>
+                    }
+                </td>
+
+                @{
+                    var totalLength = fabric.Rolls.Sum(x => x.CurrentLength);
+                }
+
+                <td>
+                    @if (totalLength > 0)
+                    {
+                        <strong>@totalLength.ToString("0.00") м</strong>
+                    }
+                    else
+                    {
+                        <span class="text-muted">0,00 м</span>
+                    }
                 </td>
 
                 <td class="text-end">
