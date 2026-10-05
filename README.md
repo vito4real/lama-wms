@@ -1,4 +1,6 @@
-# 🦙 LamaWMS
+# LamaWMS
+
+![LamaWMS](assets/cute_lama.png)
 
 **LamaWMS** is a lightweight Warehouse Management System designed for fabric and roll inventory management in manufacturing environments.
 
