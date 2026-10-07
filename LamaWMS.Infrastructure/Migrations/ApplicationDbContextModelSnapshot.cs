@@ -152,9 +152,7 @@ namespace LamaWMS.Infrastructure.Migrations
 
                     b.HasIndex("CellId");
 
-                    b.HasIndex("FabricId");
-
-                    b.HasIndex("Number")
+                    b.HasIndex("FabricId", "Number")
                         .IsUnique();
 
                     b.ToTable("Rolls");

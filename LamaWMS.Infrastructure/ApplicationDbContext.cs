@@ -57,7 +57,7 @@ public class ApplicationDbContext : DbContext
                 .HasMaxLength(100)
                 .IsRequired();
 
-            entity.HasIndex(x => x.Number)
+            entity.HasIndex(x => new { x.FabricId, x.Number })
                 .IsUnique();
 
             entity.Property(x => x.InitialLength)
