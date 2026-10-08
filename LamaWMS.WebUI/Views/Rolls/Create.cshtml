@@ -9,19 +9,26 @@
 <form asp-action="Create" method="post">
 
     <div class="mb-3">
-        <label asp-for="Number" class="form-label">Номер рулона</label>
-        <input asp-for="Number" class="form-control" />
-        <span asp-validation-for="Number" class="text-danger"></span>
+        <label asp-for="FabricId" class="form-label">Ткань</label>
+
+        <select asp-for="FabricId"
+                class="form-select"
+                asp-items="ViewBag.FabricId"
+                id="fabricSelect">
+            <option value="">-- Выберите ткань --</option>
+        </select>
+
+        <span asp-validation-for="FabricId"
+              class="text-danger"></span>
     </div>
 
     <div class="mb-3">
-        <label asp-for="FabricId" class="form-label">Ткань</label>
-        <select asp-for="FabricId"
-                asp-items="ViewBag.FabricId"
-                class="form-select">
-            <option value="">-- выберите ткань --</option>
-        </select>
-        <span asp-validation-for="FabricId" class="text-danger"></span>
+        <label class="form-label">Номер рулона</label>
+
+        <input id="rollNumber"
+               class="form-control"
+               value="Выберите ткань"
+               readonly />
     </div>
 
     <div class="mb-3">
@@ -31,7 +38,8 @@
 
         <input asp-for="InitialLength"
                class="form-control"
-               step="0.01" />
+               type="text"
+               inputmode="decimal" />
 
         <span asp-validation-for="InitialLength"
               class="text-danger"></span>
@@ -58,3 +66,46 @@
         Назад
     </a>
 </form>
+
+@section Scripts {
+    <script>
+        const fabricSelect = document.getElementById('fabricSelect');
+        const rollNumber = document.getElementById('rollNumber');
+
+        async function updateRollNumber() {
+            const fabricId = fabricSelect.value;
+
+            if (!fabricId) {
+                rollNumber.value = 'Выберите ткань';
+                return;
+            }
+
+            rollNumber.value = '...';
+
+            try {
+                const response = await fetch(
+                    '@Url.Action("GetNextNumber", "Rolls")'
+                    + '?fabricId='
+                    + encodeURIComponent(fabricId)
+                );
+
+                if (!response.ok) {
+                    throw new Error('Ошибка получения номера рулона');
+                }
+
+                const data = await response.json();
+
+                rollNumber.value = data.number;
+            }
+            catch {
+                rollNumber.value = 'Ошибка';
+            }
+        }
+
+        fabricSelect.addEventListener('change', updateRollNumber);
+
+        if (fabricSelect.value) {
+            updateRollNumber();
+        }
+    </script>
+}

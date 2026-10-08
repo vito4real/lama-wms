@@ -66,6 +66,25 @@ public class RollsController : Controller
         return View(roll);
     }
 
+    [HttpGet]
+    public async Task<IActionResult> GetNextNumber(Guid fabricId)
+    {
+        var numbers = await _context.Rolls
+            .Where(x => x.FabricId == fabricId)
+            .Select(x => x.Number)
+            .ToListAsync();
+
+        var maxNumber = numbers
+            .Select(x => int.TryParse(x, out var number) ? number : 0)
+            .DefaultIfEmpty(0)
+            .Max();
+
+        return Json(new
+        {
+            number = (maxNumber + 1).ToString()
+        });
+    }
+
     public async Task<IActionResult> Create()
     {
         await LoadSelectListsAsync();
@@ -77,6 +96,10 @@ public class RollsController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Create(Roll roll)
     {
+        // Номер рулона назначается системой,
+        // поэтому значение из формы не валидируем.
+        ModelState.Remove(nameof(Roll.Number));
+
         if (!ModelState.IsValid)
         {
             await LoadSelectListsAsync(
@@ -85,6 +108,18 @@ public class RollsController : Controller
 
             return View(roll);
         }
+
+        var numbers = await _context.Rolls
+            .Where(x => x.FabricId == roll.FabricId)
+            .Select(x => x.Number)
+            .ToListAsync();
+
+        var maxNumber = numbers
+            .Select(x => int.TryParse(x, out var number) ? number : 0)
+            .DefaultIfEmpty(0)
+            .Max();
+
+        roll.Number = (maxNumber + 1).ToString();
 
         roll.Id = Guid.NewGuid();
 
