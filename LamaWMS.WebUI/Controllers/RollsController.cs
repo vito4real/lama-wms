@@ -36,9 +36,10 @@ public class RollsController : Controller
                  x.Cell.Code.Contains(search)));
         }
 
-        var rolls = await query
-            .OrderBy(x => x.Number)
-            .ToListAsync();
+        var rolls = (await query.ToListAsync())
+            .OrderBy(x => x.Fabric.Name)
+            .ThenBy(x => int.Parse(x.Number))
+            .ToList();
 
         ViewBag.Search = search;
 
