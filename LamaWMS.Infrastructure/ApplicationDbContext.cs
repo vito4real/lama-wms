@@ -1,10 +1,11 @@
 ﻿using LamaWMS.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
-using System.Reflection.Emit;
+using LamaWMS.Infrastructure.Identity;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 
 namespace LamaWMS.Infrastructure;
 
-public class ApplicationDbContext : DbContext
+public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
 {
     public ApplicationDbContext(
         DbContextOptions<ApplicationDbContext> options)
