@@ -11,6 +11,9 @@ builder.Services.AddControllersWithViews(options =>
     options.ModelBinderProviders.Insert(
         0,
         new InvariantDecimalModelBinderProvider());
+
+    options.Filters.Add(
+        new Microsoft.AspNetCore.Mvc.Authorization.AuthorizeFilter());
 });
 
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
@@ -20,8 +23,7 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 builder.Services
     .AddIdentity<ApplicationUser, IdentityRole>(options =>
     {
-        options.User.RequireUniqueEmail = true;
-
+        options.User.RequireUniqueEmail = false;
         options.Password.RequiredLength = 8;
         options.Password.RequireDigit = true;
         options.Password.RequireUppercase = false;
@@ -52,29 +54,9 @@ using (var scope = app.Services.CreateScope())
         .GetRequiredService<ApplicationDbContext>();
 
     db.Database.Migrate();
-
-    var roleManager = scope.ServiceProvider
-        .GetRequiredService<RoleManager<IdentityRole>>();
-
-    string[] roles = { "Admin", "Operator", "Viewer" };
-
-    foreach (var role in roles)
-    {
-        if (!await roleManager.RoleExistsAsync(role))
-        {
-            var result = await roleManager.CreateAsync(
-                new IdentityRole(role));
-
-            if (!result.Succeeded)
-            {
-                throw new InvalidOperationException(
-                    $"Не удалось создать роль {role}: " +
-                    string.Join("; ",
-                        result.Errors.Select(x => x.Description)));
-            }
-        }
-    }
 }
+
+await IdentitySeed.SeedAsync(app.Services);
 
 if (!app.Environment.IsDevelopment())
 {

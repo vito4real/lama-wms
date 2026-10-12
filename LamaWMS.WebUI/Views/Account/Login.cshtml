@@ -1,0 +1,46 @@
+﻿@{
+    ViewData["Title"] = "Вход";
+}
+
+<div class="row justify-content-center mt-5">
+    <div class="col-md-4 col-lg-3">
+        <div class="text-center mb-4">
+            <img src="~/img/LogoLama.png"
+                 asp-append-version="true"
+                 alt="LamaWMS"
+                 class="img-fluid"
+                 style="max-height: 100px; width: auto;" />
+        </div>
+        <p class="text-center mb-4" style="font-weight: 600; font-size: 1.25rem; " >Система управления складом тканей</p>
+
+        <form asp-controller="Account"
+              asp-action="Login"
+              method="post">
+
+            <div asp-validation-summary="All"
+                 class="text-danger mb-3"></div>
+
+            <div class="mb-3">
+                <label class="form-label">Логин</label>
+                <input name="userName"
+                       class="form-control"
+                       autocomplete="username"
+                       required />
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Пароль</label>
+                <input name="password"
+                       type="password"
+                       class="form-control"
+                       autocomplete="current-password"
+                       required />
+            </div>
+
+            <button type="submit"
+                    class="btn btn-primary w-100">
+                Войти
+            </button>
+        </form>
+    </div>
+</div>
