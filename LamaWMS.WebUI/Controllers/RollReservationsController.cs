@@ -1,4 +1,5 @@
-﻿using LamaWMS.Domain.Entities;
+using Microsoft.AspNetCore.Authorization;
+using LamaWMS.Domain.Entities;
 using LamaWMS.Infrastructure;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -8,6 +9,7 @@ using System.Security.Claims;
 
 namespace LamaWMS.WebUI.Controllers;
 
+[Authorize(Roles = "Admin,Operator,Viewer")]
 public class RollReservationsController : Controller
 {
     private readonly ApplicationDbContext _context;
@@ -64,6 +66,7 @@ public class RollReservationsController : Controller
     }
 
     [HttpGet]
+    [Authorize(Roles = "Admin,Operator")]
     public async Task<IActionResult> Create(
     Guid productId,
     string? requestNumber)
@@ -99,6 +102,7 @@ public class RollReservationsController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
+    [Authorize(Roles = "Admin,Operator")]
     public async Task<IActionResult> Create(
     Guid productId,
     string requestNumber,
@@ -299,6 +303,7 @@ public class RollReservationsController : Controller
     }
 
     [HttpGet]
+    [Authorize(Roles = "Admin,Operator")]
     public async Task<IActionResult> Consume(Guid id)
     {
         var reservation = await _context.RollReservations
@@ -316,6 +321,7 @@ public class RollReservationsController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
+    [Authorize(Roles = "Admin,Operator")]
     public async Task<IActionResult> Consume(Guid id, decimal consumedLength)
     {
         var reservation = await _context.RollReservations
@@ -397,6 +403,7 @@ public class RollReservationsController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
+    [Authorize(Roles = "Admin,Operator")]
     public async Task<IActionResult> Delete(Guid id)
     {
         var reservation = await _context.RollReservations

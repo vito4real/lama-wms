@@ -1,4 +1,5 @@
-﻿using LamaWMS.Domain.Entities;
+using Microsoft.AspNetCore.Authorization;
+using LamaWMS.Domain.Entities;
 using LamaWMS.Infrastructure;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
@@ -6,6 +7,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace LamaWMS.WebUI.Controllers;
 
+[Authorize(Roles = "Admin,Operator,Viewer")]
 public class ProductsController : Controller
 {
     private readonly ApplicationDbContext _context;
@@ -58,6 +60,7 @@ public class ProductsController : Controller
         return View(product);
     }
 
+    [Authorize(Roles = "Admin,Operator")]
     public IActionResult Create()
     {
         return View();
@@ -65,6 +68,7 @@ public class ProductsController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
+    [Authorize(Roles = "Admin,Operator")]
     public async Task<IActionResult> Create(Product product)
     {
         if (!ModelState.IsValid)
@@ -78,6 +82,7 @@ public class ProductsController : Controller
         return RedirectToAction(nameof(Index));
     }
 
+    [Authorize(Roles = "Admin,Operator")]
     public async Task<IActionResult> Edit(Guid? id)
     {
         if (id == null)
@@ -93,6 +98,7 @@ public class ProductsController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
+    [Authorize(Roles = "Admin,Operator")]
     public async Task<IActionResult> Edit(Guid id, Product product)
     {
         if (id != product.Id)
@@ -107,6 +113,7 @@ public class ProductsController : Controller
         return RedirectToAction(nameof(Index));
     }
 
+    [Authorize(Roles = "Admin,Operator")]
     public async Task<IActionResult> Delete(Guid? id)
     {
         if (id == null)
@@ -124,6 +131,7 @@ public class ProductsController : Controller
 
     [HttpPost, ActionName("Delete")]
     [ValidateAntiForgeryToken]
+    [Authorize(Roles = "Admin,Operator")]
     public async Task<IActionResult> DeleteConfirmed(Guid id)
     {
         var product = await _context.Products.FindAsync(id);
@@ -137,6 +145,7 @@ public class ProductsController : Controller
         return RedirectToAction(nameof(Index));
     }
 
+    [Authorize(Roles = "Admin,Operator")]
     public async Task<IActionResult> AddFabric(Guid productId)
     {
         var product = await _context.Products.FindAsync(productId);
@@ -156,6 +165,7 @@ public class ProductsController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
+    [Authorize(Roles = "Admin,Operator")]
     public async Task<IActionResult> AddFabric(ProductFabric productFabric)
     {
         if (!ModelState.IsValid)
@@ -198,6 +208,7 @@ public class ProductsController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
+    [Authorize(Roles = "Admin,Operator")]
     public async Task<IActionResult> DeleteFabric(Guid id)
     {
         var productFabric = await _context.ProductFabrics

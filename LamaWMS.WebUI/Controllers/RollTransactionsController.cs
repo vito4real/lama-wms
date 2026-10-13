@@ -1,4 +1,5 @@
-﻿using LamaWMS.Domain.Entities;
+using Microsoft.AspNetCore.Authorization;
+using LamaWMS.Domain.Entities;
 using LamaWMS.Domain.Enums;
 using LamaWMS.Infrastructure;
 using Microsoft.AspNetCore.Mvc;
@@ -8,6 +9,7 @@ using System.Security.Claims;
 
 namespace LamaWMS.WebUI.Controllers;
 
+[Authorize(Roles = "Admin,Operator,Viewer")]
 public class RollTransactionsController : Controller
 {
     private readonly ApplicationDbContext _context;
@@ -67,6 +69,7 @@ public class RollTransactionsController : Controller
     // ------------------------------------------------------------
 
     [HttpGet]
+    [Authorize(Roles = "Admin,Operator")]
     public async Task<IActionResult> Receipt(Guid rollId)
     {
         var roll = await GetRollAsync(rollId);
@@ -79,6 +82,7 @@ public class RollTransactionsController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
+    [Authorize(Roles = "Admin,Operator")]
     public async Task<IActionResult> Receipt(
         Guid rollId,
         decimal length,
@@ -119,6 +123,7 @@ public class RollTransactionsController : Controller
     // ------------------------------------------------------------
 
     [HttpGet]
+    [Authorize(Roles = "Admin,Operator")]
     public async Task<IActionResult> Return(Guid rollId)
     {
         var roll = await GetRollAsync(rollId);
@@ -131,6 +136,7 @@ public class RollTransactionsController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
+    [Authorize(Roles = "Admin,Operator")]
     public async Task<IActionResult> Return(
         Guid rollId,
         decimal length,
@@ -171,6 +177,7 @@ public class RollTransactionsController : Controller
     // ------------------------------------------------------------
 
     [HttpGet]
+    [Authorize(Roles = "Admin,Operator")]
     public async Task<IActionResult> WriteOff(Guid rollId)
     {
         var roll = await GetRollAsync(rollId);
@@ -183,6 +190,7 @@ public class RollTransactionsController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
+    [Authorize(Roles = "Admin,Operator")]
     public async Task<IActionResult> WriteOff(
         Guid rollId,
         decimal length,
@@ -242,6 +250,7 @@ public class RollTransactionsController : Controller
     // ------------------------------------------------------------
 
     [HttpGet]
+    [Authorize(Roles = "Admin,Operator")]
     public async Task<IActionResult> Adjustment(Guid rollId)
     {
         var roll = await GetRollAsync(rollId);
@@ -254,6 +263,7 @@ public class RollTransactionsController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
+    [Authorize(Roles = "Admin,Operator")]
     public async Task<IActionResult> Adjustment(
         Guid rollId,
         decimal actualLength,

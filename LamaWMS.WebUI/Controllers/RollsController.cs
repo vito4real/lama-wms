@@ -1,4 +1,5 @@
-﻿using LamaWMS.Domain.Entities;
+using Microsoft.AspNetCore.Authorization;
+using LamaWMS.Domain.Entities;
 using LamaWMS.Domain.Enums;
 using LamaWMS.Infrastructure;
 using Microsoft.AspNetCore.Mvc;
@@ -8,6 +9,7 @@ using System.Security.Claims;
 
 namespace LamaWMS.WebUI.Controllers;
 
+[Authorize(Roles = "Admin,Operator,Viewer")]
 public class RollsController : Controller
 {
     private readonly ApplicationDbContext _context;
@@ -87,6 +89,7 @@ public class RollsController : Controller
         });
     }
 
+    [Authorize(Roles = "Admin,Operator")]
     public async Task<IActionResult> Create()
     {
         await LoadSelectListsAsync();
@@ -96,6 +99,7 @@ public class RollsController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
+    [Authorize(Roles = "Admin,Operator")]
     public async Task<IActionResult> Create(Roll roll)
     {
         // Номер рулона назначается системой,
@@ -149,6 +153,7 @@ public class RollsController : Controller
         return RedirectToAction(nameof(Index));
     }
 
+    [Authorize(Roles = "Admin,Operator")]
     public async Task<IActionResult> Edit(Guid? id)
     {
         if (id == null)
@@ -168,6 +173,7 @@ public class RollsController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
+    [Authorize(Roles = "Admin,Operator")]
     public async Task<IActionResult> Edit(
     Guid id,
     string number,
@@ -242,6 +248,7 @@ public class RollsController : Controller
             new { id = roll.Id });
     }
 
+    [Authorize(Roles = "Admin,Operator")]
     public async Task<IActionResult> Delete(Guid? id)
     {
         if (id == null)
@@ -260,6 +267,7 @@ public class RollsController : Controller
 
     [HttpPost, ActionName("Delete")]
     [ValidateAntiForgeryToken]
+    [Authorize(Roles = "Admin,Operator")]
     public async Task<IActionResult> DeleteConfirmed(Guid id)
     {
         var roll = await _context.Rolls.FindAsync(id);

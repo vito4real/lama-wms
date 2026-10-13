@@ -1,10 +1,12 @@
-﻿using LamaWMS.Domain.Entities;
+using Microsoft.AspNetCore.Authorization;
+using LamaWMS.Domain.Entities;
 using LamaWMS.Infrastructure;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 namespace LamaWMS.WebUI.Controllers;
 
+[Authorize(Roles = "Admin,Operator,Viewer")]
 public class FabricsController : Controller
 {
     private readonly ApplicationDbContext _context;
@@ -54,6 +56,7 @@ public class FabricsController : Controller
         return View(fabric);
     }
 
+    [Authorize(Roles = "Admin,Operator")]
     public IActionResult Create()
     {
         return View();
@@ -61,6 +64,7 @@ public class FabricsController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
+    [Authorize(Roles = "Admin,Operator")]
     public async Task<IActionResult> Create(Fabric fabric)
     {
         if (!ModelState.IsValid)
@@ -74,6 +78,7 @@ public class FabricsController : Controller
         return RedirectToAction(nameof(Index));
     }
 
+    [Authorize(Roles = "Admin,Operator")]
     public async Task<IActionResult> Edit(Guid? id)
     {
         if (id == null)
@@ -89,6 +94,7 @@ public class FabricsController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
+    [Authorize(Roles = "Admin,Operator")]
     public async Task<IActionResult> Edit(Guid id, Fabric fabric)
     {
         if (id != fabric.Id)
@@ -113,6 +119,7 @@ public class FabricsController : Controller
         return RedirectToAction(nameof(Index));
     }
 
+    [Authorize(Roles = "Admin,Operator")]
     public async Task<IActionResult> Delete(Guid? id)
     {
         if (id == null)
@@ -129,6 +136,7 @@ public class FabricsController : Controller
 
     [HttpPost, ActionName("Delete")]
     [ValidateAntiForgeryToken]
+    [Authorize(Roles = "Admin,Operator")]
     public async Task<IActionResult> DeleteConfirmed(Guid id)
     {
         var fabric = await _context.Fabrics.FindAsync(id);
