@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using LamaWMS.Domain.Enums;
 using ClosedXML.Excel;
+using System.Security.Claims;
 
 namespace LamaWMS.WebUI.Controllers;
 
@@ -44,6 +45,18 @@ public class RollReservationsController : Controller
         var reservations = await query
             .OrderByDescending(x => x.CreatedAt)
             .ToListAsync();
+
+        var userIds = reservations
+            .Where(x => x.CreatedByUserId != null)
+            .Select(x => x.CreatedByUserId!)
+            .Distinct()
+            .ToList();
+
+        ViewBag.Users = await _context.Users
+            .Where(x => userIds.Contains(x.Id))
+            .ToDictionaryAsync(
+                x => x.Id,
+                x => x.FullName);
 
         ViewBag.Search = search;
 
@@ -221,6 +234,7 @@ public class RollReservationsController : Controller
                     ProductFabricId = productFabric.Id,
                     RequestNumber = requestNumber,
                     ReservedLength = reservedLength,
+                    CreatedByUserId = User.FindFirstValue(ClaimTypes.NameIdentifier),
                     CreatedAt = DateTime.UtcNow
                 });
         }
@@ -359,6 +373,7 @@ public class RollReservationsController : Controller
             Type = RollTransactionType.Consumption,
             Length = consumedLength,
             CreatedAt = DateTime.UtcNow,
+            UserId = User.FindFirstValue(ClaimTypes.NameIdentifier),
             Comment =
                 $"Списание в производство по заявке №{reservation.RequestNumber}, " +
                 $"изделие \"{reservation.ProductFabric.Product.Name}\""
@@ -430,10 +445,20 @@ public class RollReservationsController : Controller
             .OrderByDescending(x => x.CreatedAt)
             .ToListAsync();
 
+        // Получаем ФИО пользователей, создавших резервы.
+        var userIds = reservations
+            .Where(x => x.CreatedByUserId != null)
+            .Select(x => x.CreatedByUserId!)
+            .Distinct()
+            .ToList();
+
+        var users = await _context.Users
+            .Where(x => userIds.Contains(x.Id))
+            .ToDictionaryAsync(x => x.Id, x => x.FullName);
+
         using var workbook = new XLWorkbook();
 
-        var worksheet =
-            workbook.Worksheets.Add("Резервы");
+        var worksheet = workbook.Worksheets.Add("Резервы");
 
         // Заголовки
         worksheet.Cell(1, 1).Value = "№ заявки";
@@ -443,6 +468,7 @@ public class RollReservationsController : Controller
         worksheet.Cell(1, 5).Value = "Ячейка";
         worksheet.Cell(1, 6).Value = "Зарезервировано, м";
         worksheet.Cell(1, 7).Value = "Дата";
+        worksheet.Cell(1, 8).Value = "Забронировал";
 
         var row = 2;
 
@@ -469,22 +495,27 @@ public class RollReservationsController : Controller
             worksheet.Cell(row, 7).Value =
                 reservation.CreatedAt.ToLocalTime();
 
+            worksheet.Cell(row, 8).Value =
+                reservation.CreatedByUserId != null &&
+                users.TryGetValue(
+                    reservation.CreatedByUserId, out var fullName)
+                    ? fullName
+                    : "Не указан";
+
             row++;
         }
 
         // Оформление заголовка
-        var header =
-            worksheet.Range(1, 1, 1, 7);
+        var header = worksheet.Range(1, 1, 1, 8);
 
         header.Style.Font.Bold = true;
-        header.Style.Fill.BackgroundColor =
-            XLColor.LightGray;
+        header.Style.Fill.BackgroundColor = XLColor.LightGray;
 
         // Числовой формат
         worksheet.Column(6)
             .Style.NumberFormat.Format = "0.00";
 
-        // Дата
+        // Формат даты
         worksheet.Column(7)
             .Style.DateFormat.Format = "dd.MM.yyyy HH:mm";
 
@@ -497,7 +528,7 @@ public class RollReservationsController : Controller
         // Автофильтр
         if (row > 2)
         {
-            worksheet.Range(1, 1, row - 1, 7)
+            worksheet.Range(1, 1, row - 1, 8)
                 .SetAutoFilter();
         }
 
@@ -513,4 +544,5 @@ public class RollReservationsController : Controller
             "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
             fileName);
     }
+
 }

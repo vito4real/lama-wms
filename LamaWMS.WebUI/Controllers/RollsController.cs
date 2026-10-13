@@ -4,6 +4,7 @@ using LamaWMS.Infrastructure;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
+using System.Security.Claims;
 
 namespace LamaWMS.WebUI.Controllers;
 
@@ -139,6 +140,7 @@ public class RollsController : Controller
             Type = RollTransactionType.Receipt,
             Length = roll.InitialLength,
             CreatedAt = DateTime.UtcNow,
+            UserId = User.FindFirstValue(ClaimTypes.NameIdentifier),
             Comment = "Первичный приход рулона"
         });
 

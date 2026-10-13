@@ -17,4 +17,6 @@ public class RollReservation
     public DateTime CreatedAt { get; set; }
 
     public string RequestNumber { get; set; } = null!;
+
+    public string? CreatedByUserId { get; set; }
 }

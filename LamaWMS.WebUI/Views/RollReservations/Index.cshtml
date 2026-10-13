@@ -4,6 +4,9 @@
     ViewData["Title"] = "Резервы ткани";
 
     var search = ViewBag.Search as string;
+
+    var users = ViewBag.Users as Dictionary<string, string>
+        ?? new Dictionary<string, string>();
 }
 
 <div class="d-flex justify-content-between align-items-start mb-4">
@@ -88,6 +91,7 @@ else
                         <th>Ячейка</th>
                         <th>Зарезервировано</th>
                         <th>Дата</th>
+                        <th>Пользователь</th>
                         <th></th>
                     </tr>
 
@@ -145,6 +149,13 @@ else
                                 @(reservation.CreatedAt
                                     .ToLocalTime()
                                     .ToString("dd.MM.yyyy HH:mm"))
+                            </td>
+
+                            <td>
+                                @(reservation.CreatedByUserId != null &&
+                                  users.TryGetValue(reservation.CreatedByUserId, out var fullName)
+                                    ? fullName
+                                    : "Не указан")
                             </td>
 
                             <td class="text-end text-nowrap">

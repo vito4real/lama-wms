@@ -23,4 +23,6 @@ public class RollTransaction
     public string? Comment { get; set; }
 
     public string? RequestNumber { get; set; }
+
+    public string? UserId { get; set; }
 }

@@ -176,6 +176,9 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
                 .WithMany(x => x.RollTransactions)
                 .HasForeignKey(x => x.ProductId)
                 .OnDelete(DeleteBehavior.SetNull);
+
+            entity.Property(x => x.UserId)
+                .HasMaxLength(450);
         });
     }
 
@@ -201,6 +204,9 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
                 .WithMany(x => x.RollReservations)
                 .HasForeignKey(x => x.ProductFabricId)
                 .OnDelete(DeleteBehavior.Cascade);
+
+            entity.Property(x => x.CreatedByUserId)
+                .HasMaxLength(450);
         });
     }
 }

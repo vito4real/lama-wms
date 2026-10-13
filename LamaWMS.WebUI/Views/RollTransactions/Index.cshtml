@@ -7,6 +7,9 @@
 
     var search = ViewBag.Search as string;
 
+    var users = ViewBag.Users as Dictionary<string, string>
+        ?? new Dictionary<string, string>();
+
     string GetTransactionName(RollTransactionType type)
     {
         return type switch
@@ -133,6 +136,7 @@ else
                         <th>№ заявки</th>
                         <th>Изделие</th>
                         <th>Комментарий</th>
+                        <th>Пользователь</th>
                     </tr>
 
                 </thead>
@@ -239,6 +243,13 @@ else
                                     </span>
                                 }
 
+                            </td>
+
+                            <td>
+                                @(transaction.UserId != null &&
+                                  users.TryGetValue(transaction.UserId, out var fullName)
+                                    ? fullName
+                                    : "Не указан")
                             </td>
 
                         </tr>

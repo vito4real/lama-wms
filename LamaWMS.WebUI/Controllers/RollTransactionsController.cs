@@ -4,6 +4,7 @@ using LamaWMS.Infrastructure;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using ClosedXML.Excel;
+using System.Security.Claims;
 
 namespace LamaWMS.WebUI.Controllers;
 
@@ -42,6 +43,18 @@ public class RollTransactionsController : Controller
         var transactions = await query
             .OrderByDescending(x => x.CreatedAt)
             .ToListAsync();
+
+        var userIds = transactions
+            .Where(x => x.UserId != null)
+            .Select(x => x.UserId!)
+            .Distinct()
+            .ToList();
+
+        ViewBag.Users = await _context.Users
+            .Where(x => userIds.Contains(x.Id))
+            .ToDictionaryAsync(
+                x => x.Id,
+                x => x.FullName);
 
         ViewBag.Search = search;
 
@@ -328,6 +341,7 @@ public class RollTransactionsController : Controller
                 Type = type,
                 Length = length,
                 CreatedAt = DateTime.UtcNow,
+                UserId = User.FindFirstValue(ClaimTypes.NameIdentifier),
                 Comment = comment
             });
     }
@@ -343,6 +357,7 @@ public class RollTransactionsController : Controller
     //------------------------------------------------------------
     // ЭКСПОРТ В EXCEL
     //------------------------------------------------------------
+
     [HttpGet]
     public async Task<IActionResult> ExportExcel(string? search)
     {
@@ -373,6 +388,17 @@ public class RollTransactionsController : Controller
             .OrderByDescending(x => x.CreatedAt)
             .ToListAsync();
 
+        // Получаем ФИО пользователей, выполнивших операции.
+        var userIds = transactions
+            .Where(x => x.UserId != null)
+            .Select(x => x.UserId!)
+            .Distinct()
+            .ToList();
+
+        var users = await _context.Users
+            .Where(x => userIds.Contains(x.Id))
+            .ToDictionaryAsync(x => x.Id, x => x.FullName);
+
         using var workbook = new XLWorkbook();
 
         var worksheet =
@@ -387,6 +413,7 @@ public class RollTransactionsController : Controller
         worksheet.Cell(1, 6).Value = "№ заявки";
         worksheet.Cell(1, 7).Value = "Изделие";
         worksheet.Cell(1, 8).Value = "Комментарий";
+        worksheet.Cell(1, 9).Value = "Пользователь";
 
         var row = 2;
 
@@ -418,39 +445,44 @@ public class RollTransactionsController : Controller
             worksheet.Cell(row, 8).Value =
                 transaction.Comment ?? string.Empty;
 
+            worksheet.Cell(row, 9).Value =
+                transaction.UserId != null &&
+                users.TryGetValue(
+                    transaction.UserId, out var fullName)
+                    ? fullName
+                    : "Не указан";
+
             row++;
         }
 
         // Заголовок таблицы
-        var header =
-            worksheet.Range(1, 1, 1, 8);
+        var header = worksheet.Range(1, 1, 1, 9);
 
         header.Style.Font.Bold = true;
-        header.Style.Fill.BackgroundColor =
-            XLColor.LightGray;
+        header.Style.Fill.BackgroundColor = XLColor.LightGray;
 
         // Формат даты
         worksheet.Column(1)
             .Style.DateFormat.Format = "dd.MM.yyyy HH:mm";
 
-        // Количество остаётся настоящим числом
+        // Формат количества
         worksheet.Column(5)
             .Style.NumberFormat.Format = "+0.00;-0.00;0.00";
 
         // Автоматическая ширина колонок
         worksheet.Columns().AdjustToContents();
 
-        // Чтобы комментарий не растягивал Excel на полэкрана
+        // Ограничиваем ширину комментария
         if (worksheet.Column(8).Width > 50)
             worksheet.Column(8).Width = 50;
 
         // Фиксируем заголовок
         worksheet.SheetView.FreezeRows(1);
 
-        // Фильтры Excel
+        // Автофильтр
         if (row > 2)
         {
-            worksheet.Range(1, 1, row - 1, 8)
+            worksheet.Range(1, 1, row - 1, 9)
                 .SetAutoFilter();
         }
 
