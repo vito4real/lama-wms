@@ -1,0 +1,23 @@
+@model LamaWMS.Infrastructure.Identity.ApplicationUser
+@{ ViewData["Title"] = "Редактирование сотрудника"; }
+<h2>Редактирование: @Model.UserName</h2>
+<form asp-action="Edit" method="post" class="col-md-5">
+    <input type="hidden" name="id" value="@Model.Id" />
+    <div asp-validation-summary="All" class="text-danger mb-2"></div>
+    <div class="mb-3"><label class="form-label">ФИО</label><input name="fullName" value="@Model.FullName" class="form-control" required maxlength="200" /></div>
+    <div class="mb-3"><label class="form-label">Роль</label><select name="role" class="form-select">
+        @foreach (var role in new[]
+        {
+            (Value: "Admin", Text: "Администратор"),
+            (Value: "Operator", Text: "Оператор склада"),
+            (Value: "Viewer", Text: "Наблюдатель (только просмотр)")
+        })
+        {
+            <option value="@role.Value"
+                    selected="@(ViewBag.Role == role.Value)">
+                @role.Text
+            </option>
+        }
+    </select></div>
+    <button class="btn btn-primary">Сохранить</button> <a asp-action="Index" class="btn btn-secondary">Отмена</a>
+</form>

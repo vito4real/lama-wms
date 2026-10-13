@@ -1,0 +1,14 @@
+@{ ViewData["Title"] = "Новый сотрудник"; }
+<h2>Новый сотрудник</h2>
+<form asp-action="Create" method="post" class="col-md-5">
+    <div asp-validation-summary="All" class="text-danger mb-2"></div>
+    <div class="mb-3"><label class="form-label">ФИО</label><input name="fullName" class="form-control" required maxlength="200" /></div>
+    <div class="mb-3"><label class="form-label">Логин</label><input name="login" class="form-control" required autocomplete="off" /></div>
+    <div class="mb-3">
+        <label class="form-label">Пароль</label>
+        <div class="input-group"><input id="password" name="password" type="password" class="form-control" required autocomplete="new-password" /><button class="btn btn-outline-secondary" type="button" onclick="togglePassword()">Показать / скрыть</button></div>
+    </div>
+    <div class="mb-3"><label class="form-label">Роль</label><select name="role" class="form-select"><option value="Viewer">Наблюдатель (только просмотр)</option><option value="Operator">Оператор склада</option><option value="Admin">Администратор</option></select></div>
+    <button class="btn btn-primary">Создать</button> <a asp-action="Index" class="btn btn-secondary">Отмена</a>
+</form>
+<script>function togglePassword(){const p=document.getElementById('password');p.type=p.type==='password'?'text':'password';}</script>

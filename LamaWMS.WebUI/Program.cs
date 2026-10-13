@@ -3,6 +3,7 @@ using LamaWMS.Infrastructure;
 using LamaWMS.Infrastructure.Identity;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using LamaWMS.WebUI.Identity;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -24,12 +25,14 @@ builder.Services
     .AddIdentity<ApplicationUser, IdentityRole>(options =>
     {
         options.User.RequireUniqueEmail = false;
-        options.Password.RequiredLength = 8;
-        options.Password.RequireDigit = true;
+        options.Password.RequiredLength = 6;
+        options.Password.RequiredUniqueChars = 1;
+        options.Password.RequireDigit = false;
         options.Password.RequireUppercase = false;
-        options.Password.RequireLowercase = true;
+        options.Password.RequireLowercase = false;
         options.Password.RequireNonAlphanumeric = false;
     })
+    .AddErrorDescriber<RussianIdentityErrorDescriber>()
     .AddEntityFrameworkStores<ApplicationDbContext>()
     .AddDefaultTokenProviders();
 
