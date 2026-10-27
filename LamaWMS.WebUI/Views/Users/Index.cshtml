@@ -1,26 +1,63 @@
 @model IEnumerable<LamaWMS.Infrastructure.Identity.ApplicationUser>
 @using Microsoft.AspNetCore.Identity
+@using System.Security.Claims
 @inject UserManager<LamaWMS.Infrastructure.Identity.ApplicationUser> UserManager
+
 @{
     ViewData["Title"] = "Пользователи";
+
     var roles = ViewBag.Roles as Dictionary<string, string> ?? new();
+
+    var currentUserId =
+        User.FindFirstValue(ClaimTypes.NameIdentifier);
 }
+
 <div class="d-flex justify-content-between align-items-center mb-3">
     <h2>Пользователи</h2>
-    <a asp-action="Create" class="btn btn-primary">Создать сотрудника</a>
+
+    <a asp-action="Create" class="btn btn-primary">
+        Создать сотрудника
+    </a>
 </div>
-@if (TempData["Success"] != null) { <div class="alert alert-success">@TempData["Success"]</div> }
-@if (TempData["Error"] != null) { <div class="alert alert-danger">@TempData["Error"]</div> }
+
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success">
+        @TempData["Success"]
+    </div>
+}
+
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger">
+        @TempData["Error"]
+    </div>
+}
+
 <div asp-validation-summary="All" class="text-danger"></div>
+
 <table class="table table-striped table-hover align-middle">
-    <thead><tr><th>Логин</th><th>ФИО</th><th>Роль</th><th>Статус</th><th>Действия</th></tr></thead>
-    <tbody>
-    @foreach (var user in Model)
-    {
-        var locked = await UserManager.IsLockedOutAsync(user);
+    <thead>
         <tr>
+            <th>Логин</th>
+            <th>ФИО</th>
+            <th>Роль</th>
+            <th>Статус</th>
+            <th>Действия</th>
+        </tr>
+    </thead>
+
+    <tbody>
+        @foreach (var user in Model)
+        {
+            var locked = await UserManager.IsLockedOutAsync(user);
+            var isSelf = user.Id == currentUserId;
+
+            <tr>
                 <td>@user.UserName</td>
+
                 <td>@user.FullName</td>
+
                 <td>
                     @(roles.GetValueOrDefault(user.Id) switch
                     {
@@ -30,18 +67,62 @@
                         _ => "—"
                     })
                 </td>
-            <td>@(locked ? "Заблокирован" : "Активен")</td>
-            <td>
-                <div class="d-flex flex-wrap gap-2">
-                    <a asp-action="Edit" asp-route-id="@user.Id" class="btn btn-sm btn-outline-primary">Изменить</a>
-                    <a asp-action="ResetPassword" asp-route-id="@user.Id" class="btn btn-sm btn-outline-secondary">Сменить пароль</a>
-                    <form asp-action="ToggleLock" method="post" class="d-inline">
-                        <input type="hidden" name="id" value="@user.Id" />
-                        <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('Изменить статус пользователя?')">@(locked ? "Разблокировать" : "Блокировать")</button>
-                    </form>
-                </div>
-            </td>
-        </tr>
-    }
+
+                <td>
+                    @(locked ? "Заблокирован" : "Активен")
+                </td>
+
+                <td>
+                    <div class="d-flex flex-wrap gap-2">
+
+                        <a asp-action="Edit"
+                           asp-route-id="@user.Id"
+                           class="btn btn-sm btn-outline-primary">
+                            Изменить
+                        </a>
+
+                        <a asp-action="ResetPassword"
+                           asp-route-id="@user.Id"
+                           class="btn btn-sm btn-outline-secondary">
+                            Сменить пароль
+                        </a>
+
+                        @if (!isSelf)
+                        {
+                            <form asp-action="ToggleLock"
+                                  method="post"
+                                  class="d-inline">
+
+                                <input type="hidden"
+                                       name="id"
+                                       value="@user.Id" />
+
+                                <button type="submit"
+                                        class="btn btn-sm btn-outline-danger"
+                                        onclick="return confirm('Изменить статус пользователя?')">
+                                    @(locked ? "Разблокировать" : "Блокировать")
+                                </button>
+                            </form>
+
+                            <form asp-action="Delete"
+                                  method="post"
+                                  class="d-inline">
+
+                                <input type="hidden"
+                                       name="id"
+                                       value="@user.Id" />
+
+                                <button type="submit"
+                                        class="btn btn-sm btn-danger"
+                                        onclick="return confirm('Вы действительно хотите удалить пользователя «@user.UserName»? Это действие нельзя отменить.')">
+                                    Удалить
+                                </button>
+                            </form>
+                        }
+
+                    </div>
+                </td>
+            </tr>
+        }
     </tbody>
 </table>
