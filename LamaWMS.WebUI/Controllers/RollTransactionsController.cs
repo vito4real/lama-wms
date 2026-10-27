@@ -532,6 +532,9 @@ public class RollTransactionsController : Controller
             RollTransactionType.Adjustment =>
                 "Корректировка",
 
+            RollTransactionType.ReservationTransfer =>
+                "Перенос резерва",
+
             _ => type.ToString()
         };
     }
@@ -557,6 +560,10 @@ public class RollTransactionsController : Controller
             // У Adjustment Length уже является разницей:
             // может быть как положительным, так и отрицательным.
             RollTransactionType.Adjustment =>
+                length,
+
+            // Информационная операция: не изменяет физический остаток.
+            RollTransactionType.ReservationTransfer =>
                 length,
 
             _ => length

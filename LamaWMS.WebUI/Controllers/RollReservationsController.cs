@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore;
 using LamaWMS.Domain.Enums;
 using ClosedXML.Excel;
 using System.Security.Claims;
+using System.Data;
 
 namespace LamaWMS.WebUI.Controllers;
 
@@ -300,6 +301,137 @@ public class RollReservationsController : Controller
             "Details",
             "Products",
             new { id = productId });
+    }
+
+    // Перенос целого резерва на другой рулон той же ткани.
+    [HttpGet]
+    [Authorize(Roles = "Admin,Operator")]
+    public async Task<IActionResult> Transfer(Guid id)
+    {
+        var reservation = await _context.RollReservations
+            .Include(x => x.Roll).ThenInclude(x => x.Fabric)
+            .Include(x => x.ProductFabric).ThenInclude(x => x.Product)
+            .FirstOrDefaultAsync(x => x.Id == id);
+
+        if (reservation == null)
+            return NotFound();
+
+        var candidates = await _context.Rolls
+            .AsNoTracking()
+            .Include(x => x.Cell)
+            .Include(x => x.Reservations)
+            .Where(x => x.FabricId == reservation.Roll.FabricId &&
+                        x.Id != reservation.RollId)
+            .ToListAsync();
+
+        ViewBag.TargetRolls = candidates
+            .Where(x => x.CurrentLength - x.Reservations.Sum(r => r.ReservedLength)
+                        >= reservation.ReservedLength)
+            .OrderBy(x => x.Number)
+            .ToList();
+
+        return View(reservation);
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    [Authorize(Roles = "Admin,Operator")]
+    public async Task<IActionResult> Transfer(Guid id, Guid targetRollId)
+    {
+        // Serializable гарантирует согласованность между конкурентными переносами.
+        // Остальные операции, меняющие резервы, также должны применять
+        // согласованный механизм конкурентного доступа для полной защиты.
+        await using var dbTransaction = await _context.Database
+            .BeginTransactionAsync(IsolationLevel.Serializable);
+
+        try
+        {
+            var reservation = await _context.RollReservations
+                .Include(x => x.Roll)
+                .Include(x => x.ProductFabric)
+                .FirstOrDefaultAsync(x => x.Id == id);
+
+            if (reservation == null)
+                return NotFound();
+
+            var sourceRoll = reservation.Roll;
+            var targetRoll = await _context.Rolls
+                .FirstOrDefaultAsync(x => x.Id == targetRollId);
+
+            if (targetRoll == null || sourceRoll.Id == targetRoll.Id ||
+                sourceRoll.FabricId != targetRoll.FabricId ||
+                reservation.ProductFabric.FabricId != targetRoll.FabricId)
+            {
+                TempData["Error"] = "Выбранный рулон не подходит для переноса резерва.";
+                return RedirectToAction(nameof(Transfer), new { id });
+            }
+
+            var targetReserved = await _context.RollReservations
+                .Where(x => x.RollId == targetRoll.Id)
+                .SumAsync(x => (decimal?)x.ReservedLength) ?? 0m;
+
+            var available = targetRoll.CurrentLength - targetReserved;
+
+            if (reservation.ReservedLength <= 0 || reservation.ReservedLength > available)
+            {
+                TempData["Error"] =
+                    $"Недостаточно свободной ткани на рулоне {targetRoll.Number}. " +
+                    $"Доступно {available:0.00} м, требуется {reservation.ReservedLength:0.00} м.";
+                return RedirectToAction(nameof(Transfer), new { id });
+            }
+
+            var now = DateTime.UtcNow;
+            var operatorId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var amount = reservation.ReservedLength;
+            var request = reservation.RequestNumber;
+            var productId = reservation.ProductFabric.ProductId;
+            var transferId = Guid.NewGuid();
+
+            // Одна и та же операция отражается в истории обоих рулонов.
+            // Поле Length показывает размер резерва, а не физическое движение.
+            _context.RollTransactions.AddRange(
+                new RollTransaction
+                {
+                    Id = Guid.NewGuid(), RollId = sourceRoll.Id,
+                    Type = RollTransactionType.ReservationTransfer,
+                    Length = amount, ProductId = productId,
+                    RequestNumber = request, CreatedAt = now, UserId = operatorId,
+                    Comment = $"Перенос резерва на рулон {targetRoll.Number} " // +
+                              //$"(операция {transferId})"
+                },
+                new RollTransaction
+                {
+                    Id = Guid.NewGuid(), RollId = targetRoll.Id,
+                    Type = RollTransactionType.ReservationTransfer,
+                    Length = amount, ProductId = productId,
+                    RequestNumber = request, CreatedAt = now, UserId = operatorId,
+                    Comment = $"Получен резерв с рулона {sourceRoll.Number} " // +
+                              //$"(операция {transferId})"
+                });
+
+            reservation.RollId = targetRoll.Id;
+            await _context.SaveChangesAsync();
+            await dbTransaction.CommitAsync();
+
+            TempData["Success"] =
+                $"Резерв {amount:0.00} м по заявке №{request} перенесён " +
+                $"с рулона {sourceRoll.Number} на рулон {targetRoll.Number}.";
+
+            return RedirectToAction("Details", "Rolls", new { id = sourceRoll.Id });
+        }
+        catch (DbUpdateException)
+        {
+            await dbTransaction.RollbackAsync();
+            TempData["Error"] = "Не удалось перенести резерв. Обновите страницу и повторите попытку.";
+            return RedirectToAction(nameof(Transfer), new { id });
+        }
+        catch (Exception ex) when (ex is InvalidOperationException ||
+                                   ex is System.Data.Common.DbException)
+        {
+            await dbTransaction.RollbackAsync();
+            TempData["Error"] = "Операция не выполнена из-за параллельного изменения данных. Повторите попытку.";
+            return RedirectToAction(nameof(Transfer), new { id });
+        }
     }
 
     [HttpGet]

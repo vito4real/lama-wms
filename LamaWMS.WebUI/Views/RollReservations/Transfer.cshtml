@@ -1,0 +1,63 @@
+@using LamaWMS.Domain.Entities
+@model RollReservation
+
+@{
+    ViewData["Title"] = "Перенос резерва";
+    var targetRolls = ViewBag.TargetRolls as List<Roll> ?? new();
+}
+
+<h1 class="mb-3">Перенос резерва</h1>
+
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger">@TempData["Error"]</div>
+}
+
+<div class="card mb-3">
+    <div class="card-body">
+        <p><strong>Ткань:</strong> @Model.Roll.Fabric.Name</p>
+        <p><strong>Исходный рулон:</strong> @Model.Roll.Number</p>
+        <p><strong>Заявка:</strong> @Model.RequestNumber</p>
+        <p><strong>Изделие:</strong> @Model.ProductFabric.Product.Name</p>
+        <p class="mb-0"><strong>Переносимый резерв:</strong> @Model.ReservedLength.ToString("0.00") м</p>
+    </div>
+</div>
+
+@if (targetRolls.Count == 0)
+{
+    <div class="alert alert-warning">
+        Нет других рулонов этой ткани с достаточным свободным метражом.
+    </div>
+}
+else
+{
+    <form asp-action="Transfer" method="post" class="col-lg-7">
+        @Html.AntiForgeryToken()
+        <input type="hidden" name="id" value="@Model.Id" />
+        <div class="mb-3">
+            <label for="targetRollId" class="form-label">Целевой рулон</label>
+            <select id="targetRollId" name="targetRollId" class="form-select" required>
+                <option value="">Выберите рулон</option>
+                @foreach (var roll in targetRolls)
+                {
+                    var available = roll.CurrentLength - roll.Reservations.Sum(x => x.ReservedLength);
+                    <option value="@roll.Id">
+                        Рулон @roll.Number — ячейка @(roll.Cell?.Code ?? "не размещён") — доступно @available.ToString("0.00") м
+                    </option>
+                }
+            </select>
+        </div>
+        <p class="text-muted small">Переносится весь резерв. Физический остаток ткани не меняется.</p>
+        <button type="submit" class="btn btn-primary"
+                onclick="return confirm('Перенести весь резерв на выбранный рулон?')">
+            Перенести резерв
+        </button>
+        <a asp-controller="Rolls" asp-action="Details" asp-route-id="@Model.RollId"
+           class="btn btn-outline-secondary">Отмена</a>
+    </form>
+}
+@if (targetRolls.Count == 0)
+{
+    <a asp-controller="Rolls" asp-action="Details" asp-route-id="@Model.RollId"
+       class="btn btn-outline-secondary">Назад</a>
+}

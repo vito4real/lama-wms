@@ -1,4 +1,4 @@
-﻿@model IEnumerable<RollReservation>
+@model IEnumerable<RollReservation>
 
 @{
     ViewData["Title"] = "Резервы ткани";
@@ -159,6 +159,15 @@ else
                             </td>
 
                             <td class="text-end text-nowrap">
+
+                                @if (User.IsInRole("Admin") || User.IsInRole("Operator"))
+                                {
+                                    <a asp-action="Transfer"
+                                       asp-route-id="@reservation.Id"
+                                       class="btn btn-sm btn-outline-secondary">
+                                        Перенести
+                                    </a>
+                                }
 
                                 <a asp-action="Consume"
                                    asp-route-id="@reservation.Id"

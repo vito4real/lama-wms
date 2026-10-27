@@ -1,4 +1,4 @@
-﻿@using LamaWMS.Domain.Enums
+@using LamaWMS.Domain.Enums
 @model LamaWMS.Domain.Entities.Roll
 
 @{
@@ -19,6 +19,7 @@
             RollTransactionType.Return => "Возврат",
             RollTransactionType.WriteOff => "Списание",
             RollTransactionType.Adjustment => "Корректировка",
+            RollTransactionType.ReservationTransfer => "Перенос резерва",
             _ => type.ToString()
         };
     }
@@ -44,9 +45,21 @@
             RollTransactionType.Adjustment =>
                 $"{(length > 0 ? "+" : "")}{length:0.00} м",
 
+            RollTransactionType.ReservationTransfer =>
+                $"{length:0.00} м (резерв)",
+
             _ => $"{length:0.00} м"
         };
     }
+}
+
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success">@TempData["Success"]</div>
+}
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger">@TempData["Error"]</div>
 }
 
 <div class="d-flex justify-content-between align-items-start mb-4">
@@ -278,6 +291,16 @@
                                 <td class="text-end">
 
                                     <div class="d-flex justify-content-end gap-2">
+
+                                        @if (User.IsInRole("Admin") || User.IsInRole("Operator"))
+                                        {
+                                            <a asp-controller="RollReservations"
+                                               asp-action="Transfer"
+                                               asp-route-id="@reservation.Id"
+                                               class="btn btn-sm btn-outline-primary">
+                                                Перенести
+                                            </a>
+                                        }
 
                                         <a asp-controller="RollReservations"
                                            asp-action="Consume"

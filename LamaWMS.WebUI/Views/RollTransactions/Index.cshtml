@@ -1,4 +1,4 @@
-﻿@using LamaWMS.Domain.Entities
+@using LamaWMS.Domain.Entities
 @using LamaWMS.Domain.Enums
 @model IEnumerable<RollTransaction>
 
@@ -19,6 +19,7 @@
             RollTransactionType.Return => "Возврат",
             RollTransactionType.WriteOff => "Списание",
             RollTransactionType.Adjustment => "Корректировка",
+            RollTransactionType.ReservationTransfer => "Перенос резерва",
             _ => type.ToString()
         };
     }
@@ -43,6 +44,9 @@
 
             RollTransactionType.Adjustment =>
                 $"{(length > 0 ? "+" : "")}{length:0.00} м",
+
+            RollTransactionType.ReservationTransfer =>
+                $"{length:0.00} м (резерв)",
 
             _ =>
                 $"{length:0.00} м"
