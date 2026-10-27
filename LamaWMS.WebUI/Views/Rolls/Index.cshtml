@@ -2,41 +2,94 @@
 
 @{
     ViewData["Title"] = "Ткани в цеху Жодино";
+
+    bool canEdit = User.IsInRole("Admin") ||
+                   User.IsInRole("Operator");
+
+    bool hasFilters =
+        Context.Request.Query.ContainsKey("search") ||
+        Context.Request.Query.ContainsKey("minLength") ||
+        Context.Request.Query.ContainsKey("maxLength");
 }
 
 <div class="d-flex justify-content-between align-items-center mb-3">
     <h1>Ткани в цеху Жодино</h1>
 
-    <a asp-action="Create" class="btn btn-primary">
-        Добавить ткань
-    </a>
+    @if (canEdit)
+    {
+        <a asp-action="Create" class="btn btn-primary">
+            Добавить ткань
+        </a>
+    }
 </div>
 
-<form method="get" class="mb-3">
-    <div class="d-flex flex-column flex-sm-row gap-2">
+<form asp-action="Index" method="get" class="mb-3">
 
-        <input type="text"
-               name="search"
-               value="@ViewBag.Search"
-               class="form-control flex-grow-1"
-               placeholder="Поиск по номеру, ткани или ячейке..." />
+    <div class="row g-2 align-items-end">
 
-        <div class="d-flex gap-2">
-            <button type="submit"
-                    class="btn btn-primary">
-                Найти
-            </button>
+        <div class="col-12 col-lg-6">
+            <label for="search" class="form-label">
+                Поиск
+            </label>
 
-            @if (!string.IsNullOrWhiteSpace(ViewBag.Search))
-            {
-                <a asp-action="Index"
-                   class="btn btn-outline-secondary">
-                    Сбросить
-                </a>
-            }
+            <input type="text"
+                   id="search"
+                   name="search"
+                   value="@ViewBag.Search"
+                   class="form-control"
+                   placeholder="Номер рулона, ткань или ячейка..." />
+        </div>
+
+        <div class="col-6 col-lg-2">
+            <label for="minLength" class="form-label">
+                Доступно от, м
+            </label>
+
+            <input type="text"
+                   id="minLength"
+                   name="minLength"
+                   inputmode="decimal"
+                   value="@(ViewBag.MinLength?.ToString(System.Globalization.CultureInfo.InvariantCulture))"
+                   class="form-control" />
+        </div>
+
+        <div class="col-6 col-lg-2">
+            <label for="maxLength" class="form-label">
+                Доступно до, м
+            </label>
+
+            <input type="text"
+                   id="maxLength"
+                   name="maxLength"
+                   inputmode="decimal"
+                   value="@(ViewBag.MaxLength?.ToString(System.Globalization.CultureInfo.InvariantCulture))"
+                   class="form-control" />
+        </div>
+
+        <div class="col-12 col-lg-2">
+            <div class="d-flex gap-2">
+
+                <button type="submit"
+                        class="btn btn-primary flex-fill">
+                    Найти
+                </button>
+
+                @if (hasFilters)
+                {
+                    <a asp-action="Index"
+                       class="btn btn-outline-secondary">
+                        Сбросить
+                    </a>
+                }
+
+            </div>
         </div>
 
     </div>
+
+    <div asp-validation-summary="All"
+         class="text-danger mt-2"></div>
+
 </form>
 
 <table class="table table-striped table-hover align-middle">
@@ -55,6 +108,12 @@
     <tbody>
         @foreach (var item in Model)
         {
+            var reservedLength =
+                item.Reservations.Sum(x => x.ReservedLength);
+
+            var availableLength =
+                item.CurrentLength - reservedLength;
+
             <tr>
                 <td>
                     <strong>@item.Number</strong>
@@ -78,38 +137,46 @@
                     </strong>
                 </td>
 
-                @{
-                    var reservedLength =
-                        item.Reservations.Sum(x => x.ReservedLength);
-
-                    var availableLength =
-                        item.CurrentLength - reservedLength;
-                }
-
                 <td>
-                    <strong>@availableLength.ToString("0.00") м</strong>
+                    <strong>
+                        @availableLength.ToString("0.00") м
+                    </strong>
                 </td>
 
                 <td class="text-end">
-                    <a asp-action="Details"
-                       asp-route-id="@item.Id"
-                       class="btn btn-sm btn-outline-secondary">
-                        Открыть
-                    </a>
+                    <div class="d-flex justify-content-end gap-1">
 
-                    <a asp-action="Edit"
-                       asp-route-id="@item.Id"
-                       class="btn btn-sm btn-outline-primary">
-                        Изменить
-                    </a>
+                        <a asp-action="Details"
+                           asp-route-id="@item.Id"
+                           class="btn btn-sm btn-outline-secondary">
+                            Открыть
+                        </a>
 
-                    <a asp-action="Delete"
-                       asp-route-id="@item.Id"
-                       class="btn btn-sm btn-outline-danger">
-                        Удалить
-                    </a>
+                        @if (canEdit)
+                        {
+                            <a asp-action="Edit"
+                               asp-route-id="@item.Id"
+                               class="btn btn-sm btn-outline-primary">
+                                Изменить
+                            </a>
+
+                            <a asp-action="Delete"
+                               asp-route-id="@item.Id"
+                               class="btn btn-sm btn-outline-danger">
+                                Удалить
+                            </a>
+                        }
+
+                    </div>
                 </td>
             </tr>
         }
     </tbody>
 </table>
+
+@if (!Model.Any())
+{
+    <div class="alert alert-secondary">
+        Рулоны по заданным параметрам не найдены.
+    </div>
+}

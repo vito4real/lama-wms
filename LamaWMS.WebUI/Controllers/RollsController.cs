@@ -19,8 +19,12 @@ public class RollsController : Controller
         _context = context;
     }
 
+
     [HttpGet]
-    public async Task<IActionResult> Index(string? search)
+    public async Task<IActionResult> Index(
+        string? search,
+        decimal? minLength,
+        decimal? maxLength)
     {
         var query = _context.Rolls
             .Include(x => x.Fabric)
@@ -28,6 +32,7 @@ public class RollsController : Controller
             .Include(x => x.Reservations)
             .AsQueryable();
 
+        // Поиск по номеру рулона, ткани или ячейке.
         if (!string.IsNullOrWhiteSpace(search))
         {
             search = search.Trim();
@@ -39,12 +44,47 @@ public class RollsController : Controller
                  x.Cell.Code.Contains(search)));
         }
 
+        // Проверка диапазона.
+        if (minLength.HasValue &&
+            maxLength.HasValue &&
+            minLength.Value > maxLength.Value)
+        {
+            ModelState.AddModelError(
+                string.Empty,
+                "Минимальный метраж не может превышать максимальный.");
+        }
+        else
+        {
+            // Доступно = физический остаток - сумма резервов.
+            if (minLength.HasValue)
+            {
+                query = query.Where(x =>
+                    x.CurrentLength -
+                    (x.Reservations.Sum(r =>
+                        (decimal?)r.ReservedLength) ?? 0m)
+                    >= minLength.Value);
+            }
+
+            if (maxLength.HasValue)
+            {
+                query = query.Where(x =>
+                    x.CurrentLength -
+                    (x.Reservations.Sum(r =>
+                        (decimal?)r.ReservedLength) ?? 0m)
+                    <= maxLength.Value);
+            }
+        }
+
         var rolls = (await query.ToListAsync())
             .OrderBy(x => x.Fabric.Name)
-            .ThenBy(x => int.Parse(x.Number))
+            .ThenBy(x => int.TryParse(x.Number, out var number)
+                ? number
+                : int.MaxValue)
             .ToList();
 
         ViewBag.Search = search;
+        ViewBag.MinLength = minLength;
+        ViewBag.MaxLength = maxLength;
 
         return View(rolls);
     }
