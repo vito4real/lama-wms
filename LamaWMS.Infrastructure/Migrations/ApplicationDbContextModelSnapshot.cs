@@ -57,6 +57,99 @@ namespace LamaWMS.Infrastructure.Migrations
                     b.ToTable("Fabrics");
                 });
 
+            modelBuilder.Entity("LamaWMS.Domain.Entities.FurnitureLabel", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Complectation")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<int>("Copies")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("CreatedByUserId")
+                        .HasMaxLength(450)
+                        .HasColumnType("character varying(450)");
+
+                    b.Property<string>("DeclarationNumber")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<DateOnly>("DeclarationValidFrom")
+                        .HasColumnType("date");
+
+                    b.Property<DateOnly>("DeclarationValidTo")
+                        .HasColumnType("date");
+
+                    b.Property<string>("Designation")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("FabricGroup")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)");
+
+                    b.Property<string>("FunctionalPurpose")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<DateOnly>("ManufactureDate")
+                        .HasColumnType("date");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<string>("RequestNumber")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CreatedAt");
+
+                    b.ToTable("FurnitureLabels");
+                });
+
+            modelBuilder.Entity("LamaWMS.Domain.Entities.FurnitureLabelPrintEvent", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("Copies")
+                        .HasColumnType("integer");
+
+                    b.Property<Guid>("FurnitureLabelId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("RequestedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("RequestedByUserId")
+                        .HasMaxLength(450)
+                        .HasColumnType("character varying(450)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("FurnitureLabelId");
+
+                    b.ToTable("FurnitureLabelPrintEvents");
+                });
+
             modelBuilder.Entity("LamaWMS.Domain.Entities.Order", b =>
                 {
                     b.Property<Guid>("Id")
@@ -438,6 +531,17 @@ namespace LamaWMS.Infrastructure.Migrations
                     b.ToTable("RollReservations");
                 });
 
+            modelBuilder.Entity("LamaWMS.Domain.Entities.FurnitureLabelPrintEvent", b =>
+                {
+                    b.HasOne("LamaWMS.Domain.Entities.FurnitureLabel", "FurnitureLabel")
+                        .WithMany("PrintEvents")
+                        .HasForeignKey("FurnitureLabelId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("FurnitureLabel");
+                });
+
             modelBuilder.Entity("LamaWMS.Domain.Entities.ProductFabric", b =>
                 {
                     b.HasOne("LamaWMS.Domain.Entities.Fabric", "Fabric")
@@ -573,6 +677,11 @@ namespace LamaWMS.Infrastructure.Migrations
                     b.Navigation("ProductFabrics");
 
                     b.Navigation("Rolls");
+                });
+
+            modelBuilder.Entity("LamaWMS.Domain.Entities.FurnitureLabel", b =>
+                {
+                    b.Navigation("PrintEvents");
                 });
 
             modelBuilder.Entity("LamaWMS.Domain.Entities.Product", b =>

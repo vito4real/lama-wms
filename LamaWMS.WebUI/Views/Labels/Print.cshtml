@@ -1,0 +1,56 @@
+@model LamaWMS.Domain.Entities.FurnitureLabel
+@{
+    Layout = null;
+    var validFrom = Model.DeclarationValidFrom.ToString("dd.MM.yyyy");
+    var validTo = Model.DeclarationValidTo.ToString("dd.MM.yyyy");
+    var copies = ViewBag.Copies is int count ? count : 1;
+}
+<!doctype html>
+<html lang="ru"><head><meta charset="utf-8"/><title>Этикетка №@Model.RequestNumber</title>
+<style>
+    @@page { size: 90mm 100mm; margin: 0; }
+    * { box-sizing: border-box; }
+    html,body { margin:0; padding:0; background:white; color:black; font-family:"Times New Roman",serif; }
+    .sheet { width:90mm; height:100mm; border:0.25mm solid black; display:flex; flex-direction:column; overflow:hidden; }
+    .line { border-bottom:0.18mm solid #555; text-align:center; padding:0.45mm 1mm; line-height:1.08; overflow-wrap:anywhere; }
+    .title { font-weight:bold; font-size:11pt; }
+    .name { font-weight:bold; font-size:11pt; }
+    .designation { font-weight:bold; font-size:10pt; }
+    .normal { font-size:9pt; }
+    .small { font-size:8pt; }
+    .tiny { font-size:7.5pt; }
+    .italic { font-style:italic; }
+    .pair { display:flex; border-bottom:0.18mm solid #555; font-size:9pt; }
+    .pair > div { padding:0.5mm 1mm; }
+    .pair > div:first-child { flex:1; }
+    .pair > div:last-child { width:32%; text-align:center; border-left:0.18mm solid #555; }
+    .grow { flex:1; display:flex; flex-direction:column; justify-content:center; }
+    .bottom { height:20mm; display:flex; align-items:center; border-top:0.25mm solid black; }
+    .eac { width:27%; text-align:center; font-family:Arial,sans-serif; font-weight:900; font-stretch:condensed; font-size:31pt; letter-spacing:-3px; }
+    .order { flex:1; display:flex; justify-content:space-around; align-items:center; font-family:Arial,sans-serif; font-weight:bold; font-size:23pt; }
+    .controls { font-family:Arial,sans-serif; padding:12px; }
+    @@media print { .controls { display:none; } .sheet { page-break-after:always; } }
+    @@media screen { body { background:#eee; } .sheet { margin:10px auto; background:white; box-shadow:0 0 6px #aaa; } }
+</style></head><body>
+<div class="controls"><button type="button" onclick="window.print()">Печать / Сохранить PDF</button> <span>Формат 90 × 100 мм, масштаб 100%, без полей и колонтитулов.</span></div>
+@for (var i = 0; i < copies; i++)
+{
+<div class="sheet">
+    <div class="line title">@Model.Name</div>
+    <div class="line name">@Model.Complectation</div>
+    <div class="line designation">@Model.Designation</div>
+    <div class="line normal">Республика Беларусь</div>
+    <div class="line name">СООО «Лама-мебель»</div>
+    <div class="line small">222161 г. Жодино, 1-ый Сухогрядский проезд, 4, к.201</div>
+    <div class="pair"><div>Группа ткани:</div><div>@Model.FabricGroup</div></div>
+    <div class="pair"><div>Дата изготовления:</div><div>@Model.ManufactureDate.ToString("dd.MM.yyyy") г.</div></div>
+    <div class="line small">Гарантийный срок 24 мес. Срок службы 24 мес.</div>
+    <div class="line small italic grow">@Model.FunctionalPurpose</div>
+    <div class="line tiny">Регистрационный номер декларации о соответствии:</div>
+    <div class="line small" style="font-weight:bold">@Model.DeclarationNumber</div>
+    <div class="line tiny" style="font-weight:bold">срок действия декларации о соответствии</div>
+    <div class="line small" style="font-weight:bold">с @validFrom по @validTo</div>
+    <div class="bottom"><div class="eac">EAC</div><div class="order"><span>№</span><span>@Model.RequestNumber</span></div></div>
+</div>
+}
+</body></html>

@@ -1,0 +1,21 @@
+@model LamaWMS.WebUI.ViewModels.FurnitureLabelInput
+@{
+    ViewData["Title"] = "Новая этикетка";
+}
+<h2>Новая мебельная этикетка</h2>
+<p class="text-muted">Все сведения вводятся вручную. Этикетка не связана со справочником изделий.</p>
+<form asp-action="Create" method="post" class="row g-3" style="max-width:960px">
+    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+    <div class="col-md-6"><label asp-for="Name" class="form-label"></label><input asp-for="Name" class="form-control"/><span asp-validation-for="Name" class="text-danger"></span></div>
+    <div class="col-md-6"><label asp-for="Complectation" class="form-label"></label><input asp-for="Complectation" class="form-control"/><span asp-validation-for="Complectation" class="text-danger"></span></div>
+    <div class="col-md-6"><label asp-for="Designation" class="form-label"></label><input asp-for="Designation" class="form-control"/><span asp-validation-for="Designation" class="text-danger"></span></div>
+    <div class="col-md-6"><label asp-for="RequestNumber" class="form-label"></label><input asp-for="RequestNumber" class="form-control"/><span asp-validation-for="RequestNumber" class="text-danger"></span></div>
+    <div class="col-12"><label asp-for="FunctionalPurpose" class="form-label"></label><textarea asp-for="FunctionalPurpose" rows="2" class="form-control"></textarea><span asp-validation-for="FunctionalPurpose" class="text-danger"></span></div>
+    <div class="col-12"><label asp-for="DeclarationNumber" class="form-label"></label><input asp-for="DeclarationNumber" class="form-control"/><span asp-validation-for="DeclarationNumber" class="text-danger"></span></div>
+    <div class="col-md-6"><label asp-for="DeclarationValidFrom" class="form-label"></label><input asp-for="DeclarationValidFrom" type="date" class="form-control"/><span asp-validation-for="DeclarationValidFrom" class="text-danger"></span></div>
+    <div class="col-md-6"><label asp-for="DeclarationValidTo" class="form-label"></label><input asp-for="DeclarationValidTo" type="date" class="form-control"/><span asp-validation-for="DeclarationValidTo" class="text-danger"></span></div>
+    <div class="col-md-4"><label asp-for="FabricGroup" class="form-label"></label><input asp-for="FabricGroup" class="form-control"/><span asp-validation-for="FabricGroup" class="text-danger"></span></div>
+    <div class="col-md-4"><label asp-for="ManufactureDate" class="form-label"></label><input asp-for="ManufactureDate" type="date" class="form-control"/><span asp-validation-for="ManufactureDate" class="text-danger"></span></div>
+    <div class="col-md-4"><label asp-for="Copies" class="form-label"></label><input asp-for="Copies" type="number" min="1" max="100" class="form-control"/><span asp-validation-for="Copies" class="text-danger"></span></div>
+    <div class="col-12"><button type="submit" class="btn btn-primary">Сохранить этикетку</button> <a asp-action="Index" class="btn btn-outline-secondary">Отмена</a></div>
+</form>

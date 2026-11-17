@@ -1,0 +1,39 @@
+@model LamaWMS.Domain.Entities.FurnitureLabel
+@{
+    ViewData["Title"] = "Этикетка";
+    var users = ViewBag.Users as Dictionary<string,string> ?? new();
+}
+<h2>Этикетка по заявке №@Model.RequestNumber</h2>
+@if (TempData["Success"] is string message) { <div class="alert alert-success">@message</div> }
+<dl class="row">
+    <dt class="col-sm-3">Изделие</dt><dd class="col-sm-9">@Model.Name — @Model.Complectation</dd>
+    <dt class="col-sm-3">Обозначение</dt><dd class="col-sm-9">@Model.Designation</dd>
+    <dt class="col-sm-3">Группа ткани</dt><dd class="col-sm-9">@Model.FabricGroup</dd>
+    <dt class="col-sm-3">Дата изготовления</dt><dd class="col-sm-9">@Model.ManufactureDate.ToString("dd.MM.yyyy")</dd>
+    <dt class="col-sm-3">Создана</dt><dd class="col-sm-9">@Model.CreatedAt.ToLocalTime().ToString("dd.MM.yyyy HH:mm")</dd>
+</dl>
+@if (Model.ManufactureDate > Model.DeclarationValidTo || Model.ManufactureDate < Model.DeclarationValidFrom)
+{
+    <div class="alert alert-warning">Внимание: дата изготовления выходит за срок действия декларации. Проверьте сведения перед печатью.</div>
+}
+<div class="d-flex flex-wrap gap-2 mb-4">
+    <a asp-action="Preview" asp-route-id="@Model.Id" target="_blank" rel="noopener" class="btn btn-outline-primary">Предпросмотр</a>
+    @if (User.IsInRole("Admin") || User.IsInRole("Operator"))
+    {
+        <form asp-action="Print" asp-route-id="@Model.Id" method="post" target="_blank" class="d-flex gap-2 align-items-center">
+            <label for="copies" class="form-label mb-0">Копий</label>
+            <input id="copies" name="copies" type="number" min="1" max="100" value="@Model.Copies" class="form-control" style="width:85px" />
+            <button type="submit" class="btn btn-primary">Печать</button>
+        </form>
+        <a asp-action="Create" asp-route-copyFrom="@Model.Id" class="btn btn-outline-secondary">Создать на основе</a>
+    }
+    <a asp-action="Index" class="btn btn-outline-secondary">К истории</a>
+</div>
+<h4>Запросы на печать</h4>
+<p class="text-muted">Фиксируется запрос на печать, а не подтверждение от принтера.</p>
+<table class="table table-sm table-striped"><thead><tr><th>Дата</th><th>Копий</th><th>Пользователь</th></tr></thead><tbody>
+@foreach (var evt in Model.PrintEvents.OrderByDescending(x => x.RequestedAt))
+{
+    <tr><td>@evt.RequestedAt.ToLocalTime().ToString("dd.MM.yyyy HH:mm:ss")</td><td>@evt.Copies</td><td>@(evt.RequestedByUserId != null && users.TryGetValue(evt.RequestedByUserId, out var fullName) ? fullName : "Не указан")</td></tr>
+}
+</tbody></table>

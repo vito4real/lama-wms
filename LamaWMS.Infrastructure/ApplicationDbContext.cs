@@ -1,4 +1,4 @@
-﻿using LamaWMS.Domain.Entities;
+using LamaWMS.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using LamaWMS.Infrastructure.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
@@ -21,6 +21,8 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
     public DbSet<ProductFabric> ProductFabrics => Set<ProductFabric>();
     public DbSet<RollTransaction> RollTransactions => Set<RollTransaction>();
     public DbSet<RollReservation> RollReservations => Set<RollReservation>();
+    public DbSet<FurnitureLabel> FurnitureLabels => Set<FurnitureLabel>();
+    public DbSet<FurnitureLabelPrintEvent> FurnitureLabelPrintEvents => Set<FurnitureLabelPrintEvent>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -34,6 +36,7 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
         ConfigureProductFabric(modelBuilder);
         ConfigureRollTransaction(modelBuilder);
         ConfigureRollReservation(modelBuilder);
+        ConfigureFurnitureLabels(modelBuilder);
     }
 
     private static void ConfigureFabric(ModelBuilder modelBuilder)
@@ -207,6 +210,31 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
 
             entity.Property(x => x.CreatedByUserId)
                 .HasMaxLength(450);
+        });
+    }
+    private static void ConfigureFurnitureLabels(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<FurnitureLabel>(entity =>
+        {
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.Name).HasMaxLength(200).IsRequired();
+            entity.Property(x => x.Complectation).HasMaxLength(200).IsRequired();
+            entity.Property(x => x.Designation).HasMaxLength(100).IsRequired();
+            entity.Property(x => x.FunctionalPurpose).HasMaxLength(500).IsRequired();
+            entity.Property(x => x.DeclarationNumber).HasMaxLength(200).IsRequired();
+            entity.Property(x => x.RequestNumber).HasMaxLength(100).IsRequired();
+            entity.Property(x => x.FabricGroup).HasMaxLength(30).IsRequired();
+            entity.Property(x => x.CreatedByUserId).HasMaxLength(450);
+            entity.HasIndex(x => x.CreatedAt);
+        });
+        modelBuilder.Entity<FurnitureLabelPrintEvent>(entity =>
+        {
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.RequestedByUserId).HasMaxLength(450);
+            entity.HasOne(x => x.FurnitureLabel)
+                .WithMany(x => x.PrintEvents)
+                .HasForeignKey(x => x.FurnitureLabelId)
+                .OnDelete(DeleteBehavior.Restrict);
         });
     }
 }
