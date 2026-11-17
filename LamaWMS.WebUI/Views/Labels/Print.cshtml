@@ -14,8 +14,8 @@
     @@page { size: 90mm 100mm; margin: 0; }
     * { box-sizing: border-box; }
     html,body { margin:0; padding:0; background:white; color:black; font-family:"Times New Roman",serif; }
-    .sheet { width:90mm; height:100mm; border:0.25mm solid black; display:flex; flex-direction:column; overflow:hidden; }
-    .line { border-bottom:0.18mm solid #555; text-align:center; padding:0.45mm 1mm; line-height:1.08; overflow-wrap:anywhere; }
+    .sheet { width:90mm; height:100mm; border:none; display:flex; flex-direction:column; overflow:hidden; }
+    .line { text-align:center; padding:0.45mm 1mm; line-height:1.08; overflow-wrap:anywhere; }
     .title { font-weight:bold; font-size:11pt; }
     .name { font-weight:bold; font-size:11pt; }
     .designation { font-weight:bold; font-size:10pt; }
@@ -23,17 +23,18 @@
     .small { font-size:8pt; }
     .tiny { font-size:7.5pt; }
     .italic { font-style:italic; }
-    .pair { display:flex; border-bottom:0.18mm solid #555; font-size:9pt; }
+    .pair { display:flex; font-size:9pt; }
     .pair > div { padding:0.5mm 1mm; }
     .pair > div:first-child { flex:1; }
-    .pair > div:last-child { width:32%; text-align:center; border-left:0.18mm solid #555; }
+    .pair > div:last-child { width:32%; text-align:center; }
     .grow { flex:1; display:flex; flex-direction:column; justify-content:center; }
-    .bottom { height:20mm; display:flex; align-items:center; border-top:0.25mm solid black; }
-    .eac { width:27%; text-align:center; font-family:Arial,sans-serif; font-weight:900; font-stretch:condensed; font-size:31pt; letter-spacing:-3px; }
+    .bottom { height:20mm; display:flex; align-items:center; flex-shrink:0; }
+    .eac { width:27%; height:100%; display:flex; align-items:center; justify-content:center; }
+    .eac img { display:block; width:90%; max-height:85%; object-fit:contain; }
     .order { flex:1; display:flex; justify-content:space-around; align-items:center; font-family:Arial,sans-serif; font-weight:bold; font-size:23pt; }
     .controls { font-family:Arial,sans-serif; padding:12px; }
     @@media print { .controls { display:none; } .sheet { page-break-after:always; } }
-    @@media screen { body { background:#eee; } .sheet { margin:10px auto; background:white; box-shadow:0 0 6px #aaa; } }
+    @@media screen { body { background:#eee; } .sheet { margin:30px auto; background:white; box-shadow:0 0 6px #aaa; zoom:1.5; } }
 </style>
 </head>
 <body>
@@ -58,7 +59,7 @@
     <div class="line small" style="font-weight:bold">@Model.DeclarationNumber</div>
     <div class="line tiny" style="font-weight:bold">срок действия декларации о соответствии</div>
     <div class="line small" style="font-weight:bold">с @validFrom по @validTo</div>
-    <div class="bottom"><div class="eac">EAC</div><div class="order"><span>№</span><span>@Model.RequestNumber</span></div></div>
+    <div class="bottom"><div class="eac"><img src="@Url.Content("~/img/eac.svg")" alt="EAC" /></div><div class="order"><span>№</span><span>@Model.RequestNumber</span></div></div>
 </div>
 }
 </body>
