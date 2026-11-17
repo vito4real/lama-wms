@@ -6,7 +6,10 @@
     var copies = ViewBag.Copies is int count ? count : 1;
 }
 <!doctype html>
-<html lang="ru"><head><meta charset="utf-8"/><title>Этикетка №@Model.RequestNumber</title>
+<html lang="ru">
+<head>
+<meta charset="utf-8"/>
+<title>Этикетка №@Model.RequestNumber</title>
 <style>
     @@page { size: 90mm 100mm; margin: 0; }
     * { box-sizing: border-box; }
@@ -31,13 +34,18 @@
     .controls { font-family:Arial,sans-serif; padding:12px; }
     @@media print { .controls { display:none; } .sheet { page-break-after:always; } }
     @@media screen { body { background:#eee; } .sheet { margin:10px auto; background:white; box-shadow:0 0 6px #aaa; } }
-</style></head><body>
-<div class="controls"><button type="button" onclick="window.print()">Печать / Сохранить PDF</button> <span>Формат 90 × 100 мм, масштаб 100%, без полей и колонтитулов.</span></div>
+</style>
+</head>
+<body>
+<div class="controls">
+    <button type="button" onclick="window.print()">Печать / Сохранить PDF</button>
+    <span>Формат 90 × 100 мм, масштаб 100%, без полей и колонтитулов.</span>
+</div>
 @for (var i = 0; i < copies; i++)
 {
 <div class="sheet">
-    <div class="line title">@Model.Name</div>
-    <div class="line name">@Model.Complectation</div>
+    <div class="line title">@Model.FunctionalPurpose</div>
+    <div class="line name">@Model.Name @Model.Complectation</div>
     <div class="line designation">@Model.Designation</div>
     <div class="line normal">Республика Беларусь</div>
     <div class="line name">СООО «Лама-мебель»</div>
@@ -45,7 +53,7 @@
     <div class="pair"><div>Группа ткани:</div><div>@Model.FabricGroup</div></div>
     <div class="pair"><div>Дата изготовления:</div><div>@Model.ManufactureDate.ToString("dd.MM.yyyy") г.</div></div>
     <div class="line small">Гарантийный срок 24 мес. Срок службы 24 мес.</div>
-    <div class="line small italic grow">@Model.FunctionalPurpose</div>
+    <div class="line small italic grow">Изделие относится к трудновоспламеняемому от тлеющей сигареты</div>
     <div class="line tiny">Регистрационный номер декларации о соответствии:</div>
     <div class="line small" style="font-weight:bold">@Model.DeclarationNumber</div>
     <div class="line tiny" style="font-weight:bold">срок действия декларации о соответствии</div>
@@ -53,4 +61,5 @@
     <div class="bottom"><div class="eac">EAC</div><div class="order"><span>№</span><span>@Model.RequestNumber</span></div></div>
 </div>
 }
-</body></html>
+</body>
+</html>
