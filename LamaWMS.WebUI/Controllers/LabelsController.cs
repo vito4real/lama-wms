@@ -1,10 +1,15 @@
-using System.Security.Claims;
 using LamaWMS.Domain.Entities;
 using LamaWMS.Infrastructure;
+using LamaWMS.WebUI.Services;
 using LamaWMS.WebUI.ViewModels;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Razor;
+using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.AspNetCore.Mvc.ViewEngines;
+using Microsoft.AspNetCore.Mvc.ViewFeatures;
 using Microsoft.EntityFrameworkCore;
+using System.Security.Claims;
 
 namespace LamaWMS.WebUI.Controllers;
 
@@ -12,7 +17,22 @@ namespace LamaWMS.WebUI.Controllers;
 public class LabelsController : Controller
 {
     private readonly ApplicationDbContext _context;
-    public LabelsController(ApplicationDbContext context) => _context = context;
+
+    private readonly FurnitureLabelExportService _exportService;
+    private readonly IRazorViewEngine _viewEngine;
+    private readonly ITempDataProvider _tempDataProvider;
+
+    public LabelsController(
+    ApplicationDbContext context,
+    FurnitureLabelExportService exportService,
+    IRazorViewEngine viewEngine,
+    ITempDataProvider tempDataProvider)
+    {
+        _context = context;
+        _exportService = exportService;
+        _viewEngine = viewEngine;
+        _tempDataProvider = tempDataProvider;
+    }
 
     [HttpGet]
     public async Task<IActionResult> Index(string? search)
@@ -117,4 +137,79 @@ public class LabelsController : Controller
         ViewBag.Copies = copies;
         return View("Print", label);
     }
+
+
+    [HttpGet, Authorize(Roles = "Admin,Operator")]
+    public async Task<IActionResult> DownloadPdf(Guid id)
+    {
+        var label = await _context.FurnitureLabels
+            .AsNoTracking()
+            .FirstOrDefaultAsync(x => x.Id == id);
+
+        if (label == null) return NotFound();
+
+        var html = await RenderLabelHtmlAsync(label);
+        var bytes = await _exportService.GeneratePdfAsync(html);
+
+        return File(
+            bytes,
+            "application/pdf",
+            $"Label_{id:N}.pdf");
+    }
+
+    [HttpGet, Authorize(Roles = "Admin,Operator")]
+    public async Task<IActionResult> DownloadPng(Guid id)
+    {
+        var label = await _context.FurnitureLabels
+            .AsNoTracking()
+            .FirstOrDefaultAsync(x => x.Id == id);
+
+        if (label == null) return NotFound();
+
+        var html = await RenderLabelHtmlAsync(label);
+        var bytes = await _exportService.GeneratePngAsync(html);
+
+        return File(
+            bytes,
+            "image/png",
+            $"Label_{id:N}.png");
+    }
+
+    private async Task<string> RenderLabelHtmlAsync(
+        FurnitureLabel label)
+    {
+        var viewResult = _viewEngine.FindView(
+            ControllerContext,
+            "Print",
+            false);
+
+        if (!viewResult.Success || viewResult.View == null)
+            throw new InvalidOperationException(
+                "Не найден шаблон Views/Labels/Print.cshtml.");
+
+        await using var writer = new StringWriter();
+
+        var viewData = new ViewDataDictionary<FurnitureLabel>(
+            ViewData,
+            label);
+
+        viewData["Copies"] = 1;
+
+        var tempData = new TempDataDictionary(
+            HttpContext,
+            _tempDataProvider);
+
+        var viewContext = new ViewContext(
+            ControllerContext,
+            viewResult.View,
+            viewData,
+            tempData,
+            writer,
+            new HtmlHelperOptions());
+
+        await viewResult.View.RenderAsync(viewContext);
+
+        return writer.ToString();
+    }
+
 }

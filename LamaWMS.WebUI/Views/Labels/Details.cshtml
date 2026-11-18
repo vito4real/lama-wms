@@ -20,6 +20,20 @@
     <a asp-action="Preview" asp-route-id="@Model.Id" target="_blank" rel="noopener" class="btn btn-outline-primary">Предпросмотр</a>
     @if (User.IsInRole("Admin") || User.IsInRole("Operator"))
     {
+        <a asp-action="DownloadPdf"
+           asp-route-id="@Model.Id"
+           class="btn btn-outline-danger">
+            Скачать PDF
+        </a>
+
+        <a asp-action="DownloadPng"
+           asp-route-id="@Model.Id"
+           class="btn btn-outline-success">
+            Скачать PNG
+        </a>
+    }
+    @if (User.IsInRole("Admin") || User.IsInRole("Operator"))
+    {
         <form asp-action="Print" asp-route-id="@Model.Id" method="post" target="_blank" class="d-flex gap-2 align-items-center">
             <label for="copies" class="form-label mb-0">Копий</label>
             <input id="copies" name="copies" type="number" min="1" max="100" value="@Model.Copies" class="form-control" style="width:85px" />

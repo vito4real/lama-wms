@@ -49,6 +49,9 @@ builder.Services.ConfigureApplicationCookie(options =>
         CookieSecurePolicy.SameAsRequest;
 });
 
+builder.Services.AddScoped<
+    LamaWMS.WebUI.Services.FurnitureLabelExportService>();
+
 var app = builder.Build();
 
 using (var scope = app.Services.CreateScope())
