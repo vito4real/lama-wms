@@ -5,7 +5,7 @@
 }
 <div class="d-flex justify-content-between align-items-center mb-3">
     <h2>История этикеток</h2>
-    @if (User.IsInRole("Admin") || User.IsInRole("Operator"))
+    @if (User.IsInRole("Admin") || User.IsInRole("Marker"))
     {
         <a asp-action="Create" class="btn btn-primary">Новая этикетка</a>
     }

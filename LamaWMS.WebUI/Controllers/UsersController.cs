@@ -11,7 +11,7 @@ namespace LamaWMS.WebUI.Controllers;
 [Authorize(Roles = "Admin")]
 public class UsersController : Controller
 {
-    private static readonly string[] Roles = ["Admin", "Operator", "Viewer"];
+    private static readonly string[] Roles = ["Admin", "Operator", "Viewer", "Marker"];
 
     private readonly UserManager<ApplicationUser> _users;
     private readonly ApplicationDbContext _context;

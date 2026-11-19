@@ -15,7 +15,7 @@ public static class IdentitySeed
         var userManager = scope.ServiceProvider
             .GetRequiredService<UserManager<ApplicationUser>>();
 
-        string[] roles = { "Admin", "Operator", "Viewer" };
+        string[] roles = { "Admin", "Operator", "Viewer", "Marker" };
 
         foreach (var role in roles)
         {

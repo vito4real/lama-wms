@@ -13,7 +13,7 @@ using System.Security.Claims;
 
 namespace LamaWMS.WebUI.Controllers;
 
-[Authorize(Roles = "Admin,Operator,Viewer")]
+[Authorize(Roles = "Admin,Operator,Viewer,Marker")]
 public class LabelsController : Controller
 {
     private readonly ApplicationDbContext _context;
@@ -52,7 +52,7 @@ public class LabelsController : Controller
         return View(labels);
     }
 
-    [HttpGet, Authorize(Roles = "Admin,Operator")]
+    [HttpGet, Authorize(Roles = "Admin,Marker")]
     public IActionResult Create(Guid? copyFrom = null)
     {
         if (copyFrom == null) return View(new FurnitureLabelInput());
@@ -70,7 +70,7 @@ public class LabelsController : Controller
         });
     }
 
-    [HttpPost, ValidateAntiForgeryToken, Authorize(Roles = "Admin,Operator")]
+    [HttpPost, ValidateAntiForgeryToken, Authorize(Roles = "Admin,Marker")]
     public async Task<IActionResult> Create(FurnitureLabelInput input)
     {
         if (input.DeclarationValidFrom == default || input.DeclarationValidTo == default ||
@@ -120,7 +120,7 @@ public class LabelsController : Controller
         return View("Print", label);
     }
 
-    [HttpPost, ValidateAntiForgeryToken, Authorize(Roles = "Admin,Operator")]
+    [HttpPost, ValidateAntiForgeryToken, Authorize(Roles = "Admin,Marker")]
     public async Task<IActionResult> Print(Guid id, int copies = 1)
     {
         var label = await _context.FurnitureLabels.AsNoTracking().FirstOrDefaultAsync(x => x.Id == id);
@@ -139,7 +139,7 @@ public class LabelsController : Controller
     }
 
 
-    [HttpGet, Authorize(Roles = "Admin,Operator")]
+    [HttpGet, Authorize(Roles = "Admin,Marker")]
     public async Task<IActionResult> DownloadPdf(Guid id)
     {
         var label = await _context.FurnitureLabels
@@ -157,7 +157,7 @@ public class LabelsController : Controller
             $"Label_{id:N}.pdf");
     }
 
-    [HttpGet, Authorize(Roles = "Admin,Operator")]
+    [HttpGet, Authorize(Roles = "Admin,Marker")]
     public async Task<IActionResult> DownloadPng(Guid id)
     {
         var label = await _context.FurnitureLabels

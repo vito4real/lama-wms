@@ -20,7 +20,12 @@ public class AccountController : Controller
     public IActionResult Login()
     {
         if (User.Identity?.IsAuthenticated == true)
+        {
+            if (User.IsInRole("Marker"))
+                return RedirectToAction("Index", "Labels");
+
             return RedirectToAction("Index", "Rolls");
+        }
 
         return View();
     }
@@ -46,7 +51,14 @@ public class AccountController : Controller
             lockoutOnFailure: true);
 
         if (result.Succeeded)
+        {
+            var user = await _signInManager.UserManager.FindByNameAsync(userName);
+
+            if (user != null && await _signInManager.UserManager.IsInRoleAsync(user, "Marker"))
+                return RedirectToAction("Index", "Labels");
+
             return RedirectToAction("Index", "Rolls");
+        }
 
         ModelState.AddModelError(
             "", "Неверный логин или пароль.");

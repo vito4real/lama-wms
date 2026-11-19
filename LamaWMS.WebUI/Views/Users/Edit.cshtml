@@ -8,6 +8,7 @@
     <div class="mb-3"><label class="form-label">Роль</label><select name="role" class="form-select">
         @foreach (var role in new[]
         {
+            (Value: "Marker", Text: "Оператор маркировки"),
             (Value: "Admin", Text: "Администратор"),
             (Value: "Operator", Text: "Оператор склада"),
             (Value: "Viewer", Text: "Наблюдатель (только просмотр)")
