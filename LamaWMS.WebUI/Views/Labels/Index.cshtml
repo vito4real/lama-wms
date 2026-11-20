@@ -3,6 +3,10 @@
     ViewData["Title"] = "Этикетки";
     var users = ViewBag.Users as Dictionary<string,string> ?? new();
 }
+@if (TempData["Success"] is string message)
+{
+    <div class="alert alert-success">@message</div>
+}
 <div class="d-flex justify-content-between align-items-center mb-3">
     <h2>История этикеток</h2>
     @if (User.IsInRole("Admin") || User.IsInRole("Marker"))

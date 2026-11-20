@@ -175,6 +175,29 @@ public class LabelsController : Controller
             $"Label_{id:N}.png");
     }
 
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    [Authorize(Roles = "Admin,Marker")]
+    public async Task<IActionResult> Delete(Guid id)
+    {
+        var label = await _context.FurnitureLabels
+            .Include(x => x.PrintEvents)
+            .FirstOrDefaultAsync(x => x.Id == id);
+
+        if (label == null)
+            return NotFound();
+
+        _context.FurnitureLabelPrintEvents.RemoveRange(label.PrintEvents);
+        _context.FurnitureLabels.Remove(label);
+
+        await _context.SaveChangesAsync();
+
+        TempData["Success"] = "Этикетка удалена.";
+
+        return RedirectToAction(nameof(Index));
+    }
+
     private async Task<string> RenderLabelHtmlAsync(
         FurnitureLabel label)
     {

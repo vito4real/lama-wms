@@ -42,6 +42,19 @@
         <a asp-action="Create" asp-route-copyFrom="@Model.Id" class="btn btn-outline-secondary">Создать на основе</a>
     }
     <a asp-action="Index" class="btn btn-outline-secondary">К истории</a>
+    @if (User.IsInRole("Admin") || User.IsInRole("Marker"))
+    {
+        <form asp-action="Delete"
+              asp-route-id="@Model.Id"
+              method="post"
+              class="m-0"
+              onsubmit="return confirm('Вы действительно хотите удалить эту этикетку? История её печати также будет удалена.');">
+
+            <button type="submit" class="btn btn-danger">
+                Удалить
+            </button>
+        </form>
+    }
 </div>
 <h4>Запросы на печать</h4>
 <p class="text-muted">Фиксируется запрос на печать, а не подтверждение от принтера.</p>
