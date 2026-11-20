@@ -16,6 +16,14 @@
 {
     <div class="alert alert-warning">Внимание: дата изготовления выходит за срок действия декларации. Проверьте сведения перед печатью.</div>
 }
+@if (Model.DeclarationValidTo < DateOnly.FromDateTime(DateTime.Today))
+{
+    <div class="alert alert-danger" role="alert">
+        <strong>Внимание!</strong>
+        Срок действия декларации соответствия истёк
+        @Model.DeclarationValidTo.ToString("dd.MM.yyyy").
+    </div>
+}
 <div class="d-flex flex-wrap gap-2 mb-4">
     <a asp-action="Preview" asp-route-id="@Model.Id" target="_blank" rel="noopener" class="btn btn-outline-primary">Предпросмотр</a>
     @if (User.IsInRole("Admin") || User.IsInRole("Marker"))
